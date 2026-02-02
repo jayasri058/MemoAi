@@ -1,0 +1,26 @@
+torch 
+transformers 
+accelerate 
+datasets 
+librosa 
+soundfile 
+sentence-transformers 
+chromadb 
+tiktoken 
+colorama
+
+# categorization
+langchain
+langchain-google-genai
+langchain-community
+langchain-core
+
+
+# image captions
+pillow
+google-genai
+faiss-cpu
+flask
+flask-cors
+python-dotenv
+werkzeug

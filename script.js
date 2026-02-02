@@ -1,0 +1,1222 @@
+// MemoAI Website JavaScript
+document.addEventListener('DOMContentLoaded', function () {
+    // DOM Elements
+    const startRecordingBtn = document.getElementById('start-recording');
+    const voiceOutput = document.getElementById('voice-output');
+    const recordingStatus = document.getElementById('recording-status');
+    const clearVoiceBtn = document.getElementById('clear-voice');
+    const submitVoiceBtn = document.getElementById('submit-voice');
+    const savingSpinner = document.getElementById('saving-spinner');
+    const saveStatus = document.getElementById('save-status');
+    const uploadArea = document.getElementById('upload-area');
+    const imageUpload = document.getElementById('image-upload');
+    const imagePreview = document.getElementById('image-preview');
+    const imageDescriptionSection = document.getElementById('image-description-section');
+    const imageDescription = document.getElementById('image-description');
+    const submitImageBtn = document.getElementById('submit-image');
+    const clearImageBtn = document.getElementById('clear-image');
+    const imageSavingSpinner = document.getElementById('image-saving-spinner');
+    const imageSaveStatus = document.getElementById('image-save-status');
+    const processBtn = document.getElementById('process-btn');
+    const categoryResult = document.getElementById('category-result');
+    const contextResult = document.getElementById('context-result');
+    const tagsResult = document.getElementById('tags-result');
+    const searchQuery = document.getElementById('search-query');
+    const searchBtn = document.getElementById('search-btn');
+    const searchResults = document.getElementById('search-results');
+
+    // State variables
+    let isRecording = false;
+    let recognition;
+    let heroInterval;
+    let silenceTimeout;
+    let currentSearchResults = [];
+
+    // Initialize speech recognition
+    initializeSpeechRecognition();
+
+    // Event Listeners
+    startRecordingBtn.addEventListener('click', toggleRecording);
+    clearVoiceBtn.addEventListener('click', clearVoiceOutput);
+    submitVoiceBtn.addEventListener('click', submitVoiceMemory);
+    uploadArea.addEventListener('click', () => imageUpload.click());
+    imageUpload.addEventListener('change', handleImageUpload);
+    submitImageBtn.addEventListener('click', submitImageMemory);
+    clearImageBtn.addEventListener('click', clearImage);
+    processBtn.addEventListener('click', processMemory);
+    searchBtn.addEventListener('click', searchMemories);
+    searchQuery.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            searchMemories();
+        }
+    });
+
+    // Mobile Menu Logic
+    const hamburgerMenu = document.getElementById('hamburger-menu');
+    const navMenu = document.getElementById('nav-menu');
+
+    // Create overlay element
+    const navOverlay = document.createElement('div');
+    navOverlay.className = 'nav-overlay';
+    document.body.appendChild(navOverlay);
+
+    const navLogin = document.getElementById('nav-login');
+    const navRegister = document.getElementById('nav-register');
+    const navLogout = document.getElementById('nav-logout');
+
+    // Check login status and update UI
+    const loggedInUser = localStorage.getItem('user');
+    if (loggedInUser) {
+        if (navLogin) navLogin.parentElement.style.display = 'none';
+        if (navRegister) navRegister.parentElement.style.display = 'none';
+        if (navLogout) navLogout.style.display = 'block';
+    } else {
+        if (navLogin) navLogin.parentElement.style.display = 'block';
+        if (navRegister) navRegister.parentElement.style.display = 'block';
+        if (navLogout) navLogout.style.display = 'none';
+    }
+
+    // Logout functionality
+    if (navLogout) {
+        navLogout.addEventListener('click', (e) => {
+            e.preventDefault();
+            logout();
+        });
+    }
+
+    function logout() {
+        // Clear user session
+        localStorage.removeItem('user');
+
+        // Show notification if possible
+        alert('Logged out successfully');
+
+        // Redirect to register page
+        window.location.href = 'register.html';
+    }
+
+    if (hamburgerMenu && navMenu) {
+        hamburgerMenu.addEventListener('click', () => {
+            hamburgerMenu.classList.toggle('active');
+            navMenu.classList.toggle('active');
+            navOverlay.classList.toggle('active');
+            document.body.style.overflow = navMenu.classList.contains('active') ? 'hidden' : '';
+        });
+
+        navOverlay.addEventListener('click', () => {
+            hamburgerMenu.classList.remove('active');
+            navMenu.classList.remove('active');
+            navOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+        });
+
+        // Close menu when link is clicked
+        document.querySelectorAll('.nav-menu a').forEach(link => {
+            link.addEventListener('click', function () {
+                // Remove active class from all links
+                document.querySelectorAll('.nav-menu a').forEach(l => l.classList.remove('active'));
+
+                // Add active class to clicked link
+                this.classList.add('active');
+
+                // Delay closing the menu to show the highlight
+                setTimeout(() => {
+                    hamburgerMenu.classList.remove('active');
+                    navMenu.classList.remove('active');
+                    navOverlay.classList.remove('active');
+                    document.body.style.overflow = '';
+                }, 300);
+            });
+        });
+    }
+
+    // Initialize Speech Recognition
+    function initializeSpeechRecognition() {
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.maxAlternatives = 1;
+            recognition.lang = 'en-US';
+
+            recognition.onstart = () => {
+                console.log('Speech recognition started');
+                startRecordingBtn.classList.add('recording');
+                recordingStatus.textContent = 'Listening... Speak now';
+            };
+
+            let lastResultTime = Date.now();
+
+            recognition.onresult = (event) => {
+                // Get the latest result
+                let transcript = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    transcript += event.results[i][0].transcript;
+                }
+                voiceOutput.value = transcript;
+
+                // Enable the submit button when there's text
+                submitVoiceBtn.disabled = !transcript || transcript.trim() === '';
+
+                console.log('Recognized:', transcript);
+
+                // Reset the silence timeout
+                lastResultTime = Date.now();
+
+                if (silenceTimeout) {
+                    clearTimeout(silenceTimeout);
+                }
+
+                // Set a timeout to stop recognition after 5 seconds of silence
+                silenceTimeout = setTimeout(() => {
+                    recognition.stop();
+                    stopRecording();
+                    console.log('Stopped listening after 5 seconds of silence');
+                }, 5000); // 5 seconds of silence
+            };
+
+            recognition.onerror = (event) => {
+                console.error('Speech recognition error:', event.error);
+                recordingStatus.textContent = `Error: ${event.error}`;
+                stopRecording();
+            };
+
+            recognition.onend = () => {
+                console.log('Speech recognition ended');
+                stopRecording();
+            };
+
+            // Update button state when user manually edits the text
+            voiceOutput.addEventListener('input', function () {
+                submitVoiceBtn.disabled = !this.value || this.value.trim() === '';
+            });
+        } else {
+            console.warn('Speech Recognition not supported in this browser');
+            recordingStatus.textContent = 'Speech recognition not supported in your browser';
+            startRecordingBtn.disabled = true;
+        }
+    }
+
+    // Toggle recording
+    function toggleRecording() {
+        if (!isRecording) {
+            startRecording();
+        } else {
+            stopRecording();
+        }
+    }
+
+    // Start recording
+    function startRecording() {
+        if (recognition) {
+            recognition.start();
+            isRecording = true;
+            startRecordingBtn.classList.add('recording');
+            recordingStatus.textContent = 'Listening... Speak now';
+        }
+    }
+
+    // Stop recording
+    function stopRecording() {
+        if (recognition) {
+            recognition.stop();
+            isRecording = false;
+            startRecordingBtn.classList.remove('recording');
+            recordingStatus.textContent = 'Click mic to start recording';
+        }
+
+        // Clear the silence timeout if it exists
+        if (silenceTimeout) {
+            clearTimeout(silenceTimeout);
+            silenceTimeout = null;
+        }
+    }
+
+    // Clear voice output
+    function clearVoiceOutput() {
+        voiceOutput.value = '';
+        recordingStatus.textContent = 'Click mic to start recording';
+        submitVoiceBtn.disabled = true;
+        saveStatus.textContent = '';
+    }
+
+    // Submit voice memory
+    function submitVoiceMemory() {
+        const voiceText = voiceOutput.value.trim();
+
+        if (!voiceText) {
+            showError('Please record some voice input first.');
+            return;
+        }
+
+        // Show saving spinner and status
+        savingSpinner.style.display = 'block';
+        saveStatus.textContent = 'Processing...';
+        submitVoiceBtn.disabled = true;
+
+        // Prepare data for backend
+        const requestData = {
+            voice_text: voiceText,
+            has_image: false
+        };
+
+        // Call backend API to process and save
+        fetch('/api/process-memory', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestData)
+        })
+            .then(response => response.json())
+            .then(result => {
+                // Hide spinner and show success
+                savingSpinner.style.display = 'none';
+                saveStatus.textContent = 'Saved & Processed!';
+
+                // Update processing results section
+                categoryResult.textContent = result.category || 'Uncategorized';
+                contextResult.textContent = result.context || 'No context generated';
+                tagsResult.textContent = result.tags?.join(', ') || 'No tags generated';
+
+                // Store in local memory for search
+                addToLocalMemory(result);
+
+                // Reset status after a moment
+                setTimeout(() => {
+                    saveStatus.textContent = 'Saved to MemoAI';
+                }, 2000);
+
+                // Re-enable submit button
+                submitVoiceBtn.disabled = false;
+            })
+            .catch(error => {
+                console.error('Error processing memory:', error);
+                savingSpinner.style.display = 'none';
+                saveStatus.textContent = 'Error saving';
+                showError('Failed to save memory. Please try again.');
+                submitVoiceBtn.disabled = false;
+            });
+    }
+
+    // Handle image upload
+    function handleImageUpload(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                imagePreview.innerHTML = `<img src="${e.target.result}" alt="Uploaded image">`;
+                imagePreview.style.display = 'block';
+                uploadArea.style.display = 'none';
+                imageDescriptionSection.style.display = 'block';
+                imageDescription.focus();
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    // Clear image
+    function clearImage() {
+        imagePreview.innerHTML = '';
+        imagePreview.style.display = 'none';
+        uploadArea.style.display = 'block';
+        imageUpload.value = '';
+        imageDescriptionSection.style.display = 'none';
+        imageDescription.value = '';
+        imageSaveStatus.textContent = '';
+    }
+
+    // Process memory (connect to backend API)
+    async function processMemory() {
+        const voiceText = voiceOutput.value.trim();
+        const hasImage = imagePreview.querySelector('img') !== null;
+
+        if (!voiceText && !hasImage) {
+            showError('Please provide either voice input or an image to process.');
+            return;
+        }
+
+        // Show processing state
+        categoryResult.textContent = 'Processing...';
+        contextResult.textContent = 'Analyzing content...';
+        tagsResult.textContent = 'Generating tags...';
+
+        try {
+            // Prepare data for backend
+            const requestData = {
+                voice_text: voiceText,
+                has_image: hasImage
+            };
+
+            // If image exists, convert to base64
+            if (hasImage) {
+                const imageData = imagePreview.querySelector('img').src;
+                requestData.image_data = imageData;
+            }
+
+            // Call backend API with timeout
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+            const response = await fetch('/api/process-memory', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestData),
+                signal: controller.signal
+            });
+
+            clearTimeout(timeoutId);
+
+            if (!response.ok) {
+                throw new Error(`Server error: ${response.status}`);
+            }
+
+            const result = await response.json();
+
+            // Update UI with results
+            categoryResult.textContent = result.category || 'Uncategorized';
+            contextResult.textContent = result.context || 'No context generated';
+            tagsResult.textContent = result.tags?.join(', ') || 'No tags generated';
+
+            // Store in local memory for search
+            addToLocalMemory(result);
+
+        } catch (error) {
+            console.error('Processing error:', error);
+
+            // Check if it's a timeout error
+            if (error.name === 'AbortError') {
+                showError('Request timed out. Please try again later.');
+            } else {
+                showError(`Failed to process memory: ${error.message}`);
+            }
+
+            // Fallback to simulation
+            simulateProcessing(voiceText, hasImage);
+        }
+    }
+
+    // Fallback simulation function
+    function simulateProcessing(voiceText, hasImage) {
+        setTimeout(() => {
+            const simulatedCategory = simulateCategoryClassification(voiceText);
+            categoryResult.textContent = simulatedCategory;
+
+            const simulatedContext = simulateContextGeneration(voiceText, hasImage);
+            contextResult.textContent = simulatedContext;
+
+            const simulatedTags = simulateTagGeneration(voiceText);
+            tagsResult.textContent = simulatedTags.join(', ');
+        }, 1500);
+    }
+
+    // Add to local memory storage
+    function addToLocalMemory(memoryData) {
+        let localMemories = JSON.parse(localStorage.getItem('memoai_memories') || '[]');
+
+        // If this is a new memory, generate a unique ID
+        if (!memoryData.id) {
+            memoryData.id = Date.now();
+        }
+
+        // Store the image data if available
+        if (memoryData.image_data) {
+            memoryData.stored_image_data = memoryData.image_data;
+        }
+
+        memoryData.timestamp = new Date().toISOString();
+
+        // Check if memory with this ID already exists
+        const existingIndex = localMemories.findIndex(m => m.id === memoryData.id);
+        if (existingIndex >= 0) {
+            // Update existing memory
+            localMemories[existingIndex] = memoryData;
+        } else {
+            // Add new memory
+            localMemories.push(memoryData);
+        }
+
+        localStorage.setItem('memoai_memories', JSON.stringify(localMemories));
+    }
+
+    // Error display function
+    function showError(message) {
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error-message';
+        errorDiv.textContent = message;
+        errorDiv.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #fecaca;
+            z-index: 9999;
+            max-width: 300px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        `;
+
+        document.body.appendChild(errorDiv);
+
+        setTimeout(() => {
+            if (errorDiv.parentNode) {
+                errorDiv.parentNode.removeChild(errorDiv);
+            }
+        }, 5000);
+    }
+
+    // Search memories functionality
+    async function searchMemories() {
+        const query = searchQuery.value.trim().toLowerCase();
+
+        if (!query) {
+            showError('Please enter a search term');
+            return;
+        }
+
+        // Show loading state
+        searchResults.innerHTML = '<p class="no-results">Searching memories...</p>';
+
+        try {
+            // Call backend API with timeout
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+            const response = await fetch(`/api/search-memories?q=${encodeURIComponent(query)}`, {
+                method: 'GET',
+                signal: controller.signal
+            });
+
+            clearTimeout(timeoutId);
+
+            if (!response.ok) {
+                throw new Error(`Server error: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            // Display results
+            currentSearchResults = data.results || [];
+            displaySearchResults(currentSearchResults);
+
+        } catch (error) {
+            console.error('Search error:', error);
+
+            // Check if it's a timeout error
+            if (error.name === 'AbortError') {
+                showError('Search request timed out. Using local search instead.');
+
+                // Fallback to local search
+                fallbackLocalSearch(query);
+            } else {
+                showError(`Search failed: ${error.message}`);
+
+                // Fallback to local search
+                fallbackLocalSearch(query);
+            }
+        }
+    }
+
+    // Fallback to local search
+    function fallbackLocalSearch(query) {
+        try {
+            // Get memories from local storage
+            let localMemories = JSON.parse(localStorage.getItem('memoai_memories') || '[]');
+
+            // If no local memories, use sample data
+            if (localMemories.length === 0) {
+                localMemories = getSampleMemories();
+            }
+
+            // Filter memories based on query
+            const results = localMemories.filter(memory =>
+                (memory.title && memory.title.toLowerCase().includes(query)) ||
+                (memory.content && memory.content.toLowerCase().includes(query)) ||
+                (memory.category && memory.category.toLowerCase().includes(query)) ||
+                (memory.tags && memory.tags.some(tag => tag.toLowerCase().includes(query))) ||
+                (memory.voice_text && memory.voice_text.toLowerCase().includes(query))
+            );
+
+            // Display results
+            currentSearchResults = results;
+            displaySearchResults(results);
+
+        } catch (error) {
+            console.error('Local search error:', error);
+            searchResults.innerHTML = '<p class="no-results">Search error occurred. Please try again.</p>';
+        }
+    }
+
+    // Get sample memories for demonstration
+    function getSampleMemories() {
+        return [
+            {
+                id: 1,
+                title: "Morning Meeting Notes",
+                content: "Discussed quarterly project updates and timeline adjustments",
+                category: "Work & Meetings",
+                date: "Today",
+                tags: ["meeting", "project", "timeline"]
+            },
+            {
+                id: 2,
+                title: "Shopping List",
+                content: "Need to buy groceries including milk, bread, eggs, and vegetables",
+                category: "Money & Shopping",
+                date: "Yesterday",
+                tags: ["shopping", "groceries", "food"]
+            },
+            {
+                id: 3,
+                title: "Learning Goals",
+                content: "Plan to learn new programming concepts this week",
+                category: "Learning & Growth",
+                date: "Last Week",
+                tags: ["learning", "goals", "programming"]
+            },
+            {
+                id: 4,
+                title: "Health Checkup",
+                content: "Doctor appointment scheduled for next Monday",
+                category: "Health & Fitness",
+                date: "This Month",
+                tags: ["health", "appointment", "doctor"]
+            }
+        ];
+    }
+
+    // Display search results
+    function displaySearchResults(results) {
+        if (results.length > 0) {
+            let resultsHTML = '';
+            results.forEach(memory => {
+                let similarityInfo = '';
+                if (memory.similarity_score !== undefined) {
+                    const similarityPercent = Math.round(memory.similarity_score * 100);
+                    similarityInfo = '<div class="similarity-score">Similarity: ' + similarityPercent + '%</div>';
+                }
+
+                // Check if this memory has an image
+                let imageHTML = '';
+                if (memory.stored_image_data) {
+                    // Display the actual image from stored data
+                    imageHTML = '<img src="' + memory.stored_image_data + '" alt="Memory image" class="memory-image-preview">';
+                } else if (memory.image_path) {
+                    // Convert backslashes to forward slashes for web compatibility
+                    const imagePath = memory.image_path.replace(/\\/g, '/');
+                    // Try to fetch the image from the server
+                    imageHTML = `<img src="/${imagePath}" alt="Memory image" class="memory-image-preview" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'200\' height=\'150\'%3E%3Crect width=\'200\' height=\'150\' fill=\'%23e2e8f0\'/%3E%3Ctext x=\'50%\' y=\'50%\' text-anchor=\'middle\' dominant-baseline=\'middle\' fill=\'%2394a3b8\' font-size=\'12\'%3E🖼️ Image Not Found%3C/text%3E%3C/svg%3E'; this.title='Image not available: ${imagePath}'; this.onerror=null;">`;
+                }
+
+                // Combine content, voice text and image description
+                let contentText = '';
+                if (memory.image_description) {
+                    contentText += '🔍 Image Analysis: ' + memory.image_description + ' ';
+                }
+                if (memory.voice_text) {
+                    contentText += memory.voice_text + ' ';
+                } else if (memory.content && !memory.image_description) {
+                    contentText += memory.content;
+                }
+
+                if (!contentText.trim()) contentText = 'No content';
+
+                resultsHTML += '<div class="memory-item" onclick="showMemoryDetails(' + memory.id + ')"' +
+                    '<div class="memory-title">' + (memory.title || 'Untitled Memory') + '</div>' +
+                    '<div class="memory-content-with-image">' +
+                    imageHTML +
+                    '<div class="memory-text-content">' +
+                    contentText.substring(0, 200) +
+                    (contentText.length > 200 ? '...' : '') +
+                    '</div>' +
+                    '</div>' +
+                    '<div class="memory-meta">' +
+                    '<span>Category: ' + (memory.category || 'Uncategorized') + '</span>' +
+                    '<span>Date: ' + (memory.date || new Date(memory.timestamp || Date.now()).toLocaleDateString()) + '</span>' +
+                    (memory.image_path ? '<span>📷 Has Image</span>' : '') +
+                    '</div>' +
+                    '<div class="memory-tags">' +
+                    (memory.tags || []).map(tag => '<span class="tag">' + tag + '</span>').join('') +
+                    '</div>' +
+                    similarityInfo +
+                    '</div>';
+            });
+            searchResults.innerHTML = resultsHTML;
+        } else {
+            searchResults.innerHTML = '<p class="no-results">No memories found. Try different keywords.</p>';
+        }
+    }
+
+    // Function to show memory details
+    function showMemoryDetails(memoryId) {
+        // First check current search results (most likely source)
+        let memory = currentSearchResults.find(m => m.id === memoryId);
+
+        if (!memory) {
+            // Find the memory in local storage or sample data
+            let localMemories = JSON.parse(localStorage.getItem('memoai_memories') || '[]');
+            memory = localMemories.find(m => m.id === memoryId);
+        }
+
+        if (!memory) {
+            // Check sample data
+            const sampleMemories = getSampleMemories();
+            memory = sampleMemories.find(m => m.id === memoryId);
+        }
+
+        if (memory) {
+            showDetailedMemoryView(memory);
+        } else {
+            alert('Memory not found: ' + memoryId);
+        }
+    }
+
+    // Function to show detailed memory view
+    function showDetailedMemoryView(memory) {
+        let imageHTML = '';
+        if (memory.stored_image_data) {
+            // Display the actual image from stored data with larger preview
+            imageHTML = '<img src="' + memory.stored_image_data + '" alt="Memory image" class="memory-image-preview-large">';
+        } else if (memory.image_path) {
+            // Convert backslashes to forward slashes for web compatibility
+            const imagePath = memory.image_path.replace(/\\/g, '/');
+            // Try to fetch the image from the server
+            imageHTML = `<img src="/${imagePath}" alt="Memory image" class="memory-image-preview-large" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'300\' height=\'200\'%3E%3Crect width=\'300\' height=\'200\' fill=\'%23e2e8f0\'/%3E%3Ctext x=\'50%\' y=\'50%\' text-anchor=\'middle\' dominant-baseline=\'middle\' fill=\'%2394a3b8\' font-size=\'14\'%3E🖼️ Image Not Found%3C/text%3E%3C/svg%3E'; this.title='Image not available: ${imagePath}'; this.onerror=null;">`;
+        }
+
+        let contentText = memory.content || memory.voice_text || 'No content';
+
+        let analysisHTML = '';
+        if (memory.image_description) {
+            analysisHTML = `
+                <div style="margin: 1.5rem 0; background: #eff6ff; padding: 1.2rem; border-radius: 10px; border-left: 4px solid #3b82f6;">
+                    <strong style="color: #1e40af; font-size: 1.05rem;">🔍 AI Image Analysis:</strong><br>
+                    <p style="margin-top: 0.5rem; font-size: 1rem; line-height: 1.6; color: #1e3a8a;">${memory.image_description}</p>
+                </div>
+            `;
+        }
+
+        const detailHTML = `
+            <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center;">
+                <div style="background: white; border-radius: 15px; padding: 2.5rem; max-width: 800px; width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);">
+                    <h3 style="margin-top: 0; color: #1e293b; font-size: 1.5rem; border-bottom: 2px solid #4f46e5; padding-bottom: 0.5rem;">${memory.title || 'Untitled Memory'}</h3>
+                    ${imageHTML}
+                    ${analysisHTML}
+                    <div style="margin: 1.5rem 0; background: #f8fafc; padding: 1.5rem; border-radius: 10px; border-left: 4px solid #4f46e5;">
+                        <strong style="color: #1e293b; font-size: 1.1rem;">Voice Content:</strong><br>
+                        <p style="white-space: pre-wrap; margin-top: 0.5rem; font-size: 1.05rem; line-height: 1.7; color: #374151;">${memory.voice_text || memory.content || 'No voice text available'}</p>
+                    </div>
+                    <div style="margin: 1.5rem 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; background: #f1f5f9; padding: 1.5rem; border-radius: 10px;">
+                        <div><strong style="color: #1e293b;">Category:</strong><br><span style="color: #4f46e5; font-weight: 500;">${memory.category || 'Uncategorized'}</span></div>
+                        <div><strong style="color: #1e293b;">Tags:</strong><br><span style="color: #64748b;">${(memory.tags || []).join(', ')}</span></div>
+                        <div><strong style="color: #1e293b;">Date:</strong><br><span style="color: #64748b;">${memory.date || new Date(memory.timestamp || Date.now()).toLocaleDateString()}</span></div>
+                        ${memory.similarity_score ? '<div><strong style="color: #1e293b;">Similarity:</strong><br><span style="color: #059669; font-weight: 500;">' + Math.round(memory.similarity_score * 100) + '%</span></div>' : ''}
+                    </div>
+                    <div style="text-align: center; margin-top: 1.5rem;">
+                        <button onclick="this.closest('div[style*="position: fixed"]').remove()" style="background: #4f46e5; color: white; border: none; padding: 0.75rem 2rem; border-radius: 8px; cursor: pointer; font-size: 1rem; font-weight: 500; transition: all 0.2s ease; box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);">Close</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', detailHTML);
+    }
+
+    // Simulate category classification based on voice text
+    function simulateCategoryClassification(text) {
+        if (!text) return 'General';
+
+        const lowerText = text.toLowerCase();
+        const categories = {
+            'Daily Life': ['home', 'family', 'personal', 'daily', 'today', 'morning', 'evening'],
+            'Work & Meetings': ['work', 'meeting', 'office', 'colleagues', 'project', 'presentation'],
+            'Learning & Growth': ['learn', 'study', 'education', 'growth', 'improve', 'knowledge'],
+            'Health & Fitness': ['health', 'exercise', 'fitness', 'diet', 'wellness', 'medical'],
+            'Money & Shopping': ['money', 'buy', 'purchase', 'shop', 'price', 'budget', 'finance'],
+            'Entertainment & Leisure': ['movie', 'music', 'game', 'fun', 'relax', 'entertainment'],
+            'Ideas & Creativity': ['idea', 'creative', 'innovation', 'design', 'think', 'brainstorm']
+        };
+
+        for (const [category, keywords] of Object.entries(categories)) {
+            if (keywords.some(keyword => lowerText.includes(keyword))) {
+                return category;
+            }
+        }
+
+        return 'General'; // Default category
+    }
+
+    // Simulate context generation
+    function simulateContextGeneration(voiceText, hasImage) {
+        if (!voiceText && !hasImage) {
+            return 'No content to analyze.';
+        }
+
+        let context = '';
+
+        if (voiceText) {
+            context += `Voice content: "${voiceText}". `;
+        }
+
+        if (hasImage) {
+            context += 'Associated with an uploaded image. ';
+        }
+
+        if (voiceText && hasImage) {
+            context += 'Combining auditory and visual information for enhanced context understanding.';
+        } else if (voiceText) {
+            context += 'Audio-based memory with textual context.';
+        } else if (hasImage) {
+            context += 'Visual memory with potential for detailed analysis.';
+        }
+
+        return context;
+    }
+
+    // Simulate tag generation
+    function simulateTagGeneration(text) {
+        if (!text) return ['general'];
+
+        const lowerText = text.toLowerCase();
+        const tags = [];
+
+        // Extract potential tags based on common patterns
+        if (lowerText.includes('meeting')) tags.push('meeting');
+        if (lowerText.includes('project')) tags.push('project');
+        if (lowerText.includes('idea')) tags.push('idea');
+        if (lowerText.includes('health')) tags.push('health');
+        if (lowerText.includes('exercise')) tags.push('fitness');
+        if (lowerText.includes('shopping')) tags.push('shopping');
+        if (lowerText.includes('learning')) tags.push('learning');
+        if (lowerText.includes('work')) tags.push('work');
+        if (lowerText.includes('family')) tags.push('family');
+        if (lowerText.includes('friend')) tags.push('social');
+        if (lowerText.includes('travel')) tags.push('travel');
+        if (lowerText.includes('food')) tags.push('food');
+
+        // If no specific tags found, use general
+        if (tags.length === 0) {
+            tags.push('general');
+        }
+
+        // Add time-related tags if present
+        if (lowerText.includes('today') || lowerText.includes('now')) tags.push('today');
+        if (lowerText.includes('tomorrow')) tags.push('tomorrow');
+        if (lowerText.includes('yesterday')) tags.push('past');
+
+        return [...new Set(tags)]; // Remove duplicates
+    }
+
+    // Smooth scrolling for navigation
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+
+    // Intersection Observer for scroll animations
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, observerOptions);
+
+    // Observe elements for animation
+    document.querySelectorAll('.feature-card, .demo-panel, .testimonial-card, .step').forEach(el => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(20px)';
+        el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        observer.observe(el);
+    });
+
+    // Add wave effect to hero section
+    const hero = document.querySelector('.hero');
+
+    if (hero) {
+        heroInterval = setInterval(() => {
+            hero.style.background = 'linear-gradient(135deg, ' +
+                `${getRandomColor()} 0%, ${getRandomColor()} 100%)`;
+        }, 5000);
+    }
+
+    // Cleanup interval on page unload
+    window.addEventListener('beforeunload', () => {
+        if (heroInterval) {
+            clearInterval(heroInterval);
+        }
+        if (silenceTimeout) {
+            clearTimeout(silenceTimeout);
+        }
+    });
+
+    // Helper function for random colors
+    function getRandomColor() {
+        const colors = [
+            '#667eea', '#764ba2',
+            '#f093fb', '#f5576c',
+            '#4facfe', '#00f2fe',
+            '#43e97b', '#38f9d7',
+            '#fa709a', '#fee140'
+        ];
+        return colors[Math.floor(Math.random() * colors.length)];
+    }
+
+    // Submit image memory
+    function submitImageMemory() {
+        const imageElement = imagePreview.querySelector('img');
+        if (!imageElement) {
+            showError('Please upload an image first.');
+            return;
+        }
+
+        const description = imageDescription.value.trim();
+
+        // Show saving spinner and status
+        imageSavingSpinner.style.display = 'block';
+        imageSaveStatus.textContent = 'Processing...';
+        submitImageBtn.disabled = true;
+
+        // Prepare data for backend
+        const requestData = {
+            voice_text: description || 'Image uploaded without description',
+            has_image: true,
+            image_data: imageElement.src
+        };
+
+        // Call backend API to process and save
+        fetch('/api/process-memory', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestData)
+        })
+            .then(response => response.json())
+            .then(result => {
+                // Hide spinner and show success
+                imageSavingSpinner.style.display = 'none';
+                imageSaveStatus.textContent = 'Saved & Processed!';
+
+                // Update processing results section
+                categoryResult.textContent = result.category || 'Uncategorized';
+                contextResult.textContent = result.context || 'No context generated';
+                tagsResult.textContent = result.tags?.join(', ') || 'No tags generated';
+
+                // Store in local memory for search
+                addToLocalMemory(result);
+
+                // Reset status after a moment
+                setTimeout(() => {
+                    imageSaveStatus.textContent = 'Saved to MemoAI';
+                }, 2000);
+
+                // Re-enable submit button
+                submitImageBtn.disabled = false;
+            })
+            .catch(error => {
+                console.error('Error processing image memory:', error);
+                imageSavingSpinner.style.display = 'none';
+                imageSaveStatus.textContent = 'Error saving';
+                showError('Failed to save image memory. Please try again.');
+                submitImageBtn.disabled = false;
+            });
+    }
+
+    // Add floating effect to feature cards on hover
+    document.querySelectorAll('.feature-card').forEach(card => {
+        card.addEventListener('mouseenter', function () {
+            this.style.transform = 'translateY(-10px) scale(1.02)';
+        });
+
+        card.addEventListener('mouseleave', function () {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+
+    // Initialize with some sample text for demonstration
+    setTimeout(() => {
+        if (!voiceOutput.value) {
+            voiceOutput.value = "This is a sample voice input for MemoAI demonstration. The system can transcribe speech and categorize it into appropriate memory categories.";
+        }
+        // Enable submit button if there's text
+        submitVoiceBtn.disabled = !voiceOutput.value.trim();
+    }, 2000);
+});
+
+// Utility function to scroll to section
+function scrollToSection(sectionId) {
+    const element = document.getElementById(sectionId);
+    if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+// ====================
+// INTERACTIVE ENHANCEMENTS
+// ====================
+
+// Custom cursor effect
+const cursorFollower = document.querySelector('.cursor-follower');
+const cursorDot = document.querySelector('.cursor-dot');
+
+if (cursorFollower && cursorDot) {
+    let mouseX = 0;
+    let mouseY = 0;
+    let followerX = 0;
+    let followerY = 0;
+
+    document.addEventListener('mousemove', (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+    });
+
+    function animateCursor() {
+        // Smooth follow for follower
+        followerX += (mouseX - followerX) * 0.1;
+        followerY += (mouseY - followerY) * 0.1;
+
+        cursorFollower.style.left = followerX - 10 + 'px';
+        cursorFollower.style.top = followerY - 10 + 'px';
+
+        // Immediate follow for dot
+        cursorDot.style.left = mouseX - 3 + 'px';
+        cursorDot.style.top = mouseY - 3 + 'px';
+
+        requestAnimationFrame(animateCursor);
+    }
+
+    animateCursor();
+
+    // Interactive elements effect
+    const interactiveElements = document.querySelectorAll('.interactive-element, .cta-btn, .feature-card, .record-btn');
+
+    interactiveElements.forEach(element => {
+        element.addEventListener('mouseenter', () => {
+            cursorFollower.style.transform = 'scale(2)';
+            cursorFollower.style.background = 'rgba(247, 37, 133, 0.5)';
+        });
+
+        element.addEventListener('mouseleave', () => {
+            cursorFollower.style.transform = 'scale(1)';
+            cursorFollower.style.background = 'rgba(247, 37, 133, 0.3)';
+        });
+    });
+}
+
+// Scroll-triggered animations
+const observerOptions = {
+    threshold: 0.1,
+    rootMargin: '0px 0px -50px 0px'
+};
+
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            entry.target.classList.add('animated');
+        }
+    });
+}, observerOptions);
+
+// Observe animated elements
+document.querySelectorAll('[data-animate]').forEach(el => {
+    observer.observe(el);
+});
+
+// Enhanced parallax effect for hero section
+let hero = document.querySelector('.hero');
+if (hero) {
+    window.addEventListener('scroll', () => {
+        const scrolled = window.pageYOffset;
+        const rate = scrolled * -0.5;
+
+        if (scrolled < window.innerHeight) {
+            hero.style.transform = `translateY(${rate}px)`;
+        }
+    });
+}
+
+// Floating particles effect
+function createFloatingParticle() {
+    const particle = document.createElement('div');
+    particle.className = 'floating-particle';
+    particle.style.left = Math.random() * 100 + '%';
+    particle.style.animationDuration = (Math.random() * 10 + 5) + 's';
+    particle.style.opacity = Math.random() * 0.5 + 0.1;
+
+    // Random particle shapes
+    const shapes = ['●', '✦', '✧', '✦'];
+    particle.textContent = shapes[Math.floor(Math.random() * shapes.length)];
+
+    document.querySelector('.hero').appendChild(particle);
+
+    // Remove particle after animation completes
+    setTimeout(() => {
+        if (particle.parentNode) {
+            particle.parentNode.removeChild(particle);
+        }
+    }, 15000);
+}
+
+// Create initial particles
+for (let i = 0; i < 15; i++) {
+    setTimeout(createFloatingParticle, i * 300);
+}
+
+// Continuous particle generation
+setInterval(createFloatingParticle, 2000);
+
+// Enhanced button ripple effect
+function createRipple(event) {
+    const button = event.currentTarget;
+    const circle = document.createElement('span');
+    const diameter = Math.max(button.clientWidth, button.clientHeight);
+    const radius = diameter / 2;
+
+    circle.style.width = circle.style.height = `${diameter}px`;
+    circle.style.left = `${event.clientX - button.getBoundingClientRect().left - radius}px`;
+    circle.style.top = `${event.clientY - button.getBoundingClientRect().top - radius}px`;
+    circle.classList.add('ripple');
+
+    const ripple = button.getElementsByClassName('ripple')[0];
+    if (ripple) {
+        ripple.remove();
+    }
+
+    button.appendChild(circle);
+}
+
+// Add ripple effect to buttons
+document.querySelectorAll('.cta-btn, .primary-btn, .record-btn').forEach(button => {
+    button.addEventListener('click', createRipple);
+});
+
+// Typewriter effect for hero headline
+function typeWriterEffect(element, text, speed = 50) {
+    let i = 0;
+    element.textContent = '';
+
+    function type() {
+        if (i < text.length) {
+            element.textContent += text.charAt(i);
+            i++;
+            setTimeout(type, speed);
+        }
+    }
+
+    type();
+}
+
+// Apply typewriter effect to hero headline
+window.addEventListener('load', () => {
+    const heroTitle = document.querySelector('.hero-content h1');
+    if (heroTitle) {
+        const originalText = heroTitle.textContent;
+        setTimeout(() => {
+            typeWriterEffect(heroTitle, originalText, 30);
+        }, 500);
+    }
+});
+
+// Enhanced testimonial carousel
+function initTestimonialCarousel() {
+    const testimonials = document.querySelectorAll('.testimonial-card');
+    let currentIndex = 0;
+
+    function showTestimonial(index) {
+        testimonials.forEach((testimonial, i) => {
+            testimonial.style.opacity = i === index ? '1' : '0.3';
+            testimonial.style.transform = i === index ? 'scale(1)' : 'scale(0.95)';
+        });
+    }
+
+    // Auto-rotate testimonials
+    setInterval(() => {
+        currentIndex = (currentIndex + 1) % testimonials.length;
+        showTestimonial(currentIndex);
+    }, 4000);
+
+    // Initial display
+    showTestimonial(0);
+}
+
+// Initialize carousel when testimonials are visible
+const testimonialSection = document.querySelector('.testimonials');
+if (testimonialSection) {
+    const testimonialObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                initTestimonialCarousel();
+                testimonialObserver.disconnect();
+            }
+        });
+    });
+
+    testimonialObserver.observe(testimonialSection);
+}
+
+// Add CSS for new interactive elements
+const style = document.createElement('style');
+style.textContent = `
+    .floating-particle {
+        position: absolute;
+        font-size: 20px;
+        color: rgba(255, 255, 255, 0.7);
+        pointer-events: none;
+        animation: floatUp linear forwards;
+        z-index: 1;
+    }
+    
+    @keyframes floatUp {
+        to {
+            transform: translateY(-100vh) rotate(360deg);
+            opacity: 0;
+        }
+    }
+    
+    .ripple {
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.7);
+        transform: scale(0);
+        animation: ripple 0.6s linear;
+        pointer-events: none;
+    }
+    
+    @keyframes ripple {
+        to {
+            transform: scale(4);
+            opacity: 0;
+        }
+    }
+    
+    /* Enhanced testimonial styling */
+    .testimonial-card {
+        transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+    
+    /* Smooth scrolling for all elements */
+    html {
+        scroll-behavior: smooth;
+    }
+`;
+document.head.appendChild(style);
