@@ -658,6 +658,39 @@ body {
     flex-wrap: wrap;
 }
 
+/* Camera Styles */
+.camera-container {
+    background: #000;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+    position: relative;
+}
+
+#camera-video {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 10px;
+}
+
+.camera-controls {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.7);
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+
+.camera-controls button {
+    flex: 1;
+    max-width: 200px;
+}
+
 /* Results Section */
 .results-section {
     background: white;

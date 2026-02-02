@@ -473,6 +473,55 @@ def google_auth():
         print(f"Error in Google auth: {e}")
         return jsonify({'error': 'Internal server error'}), 500
 
+@app.route('/api/contact', methods=['POST'])
+def contact():
+    """Handle contact form submissions"""
+    try:
+        data = request.get_json()
+        name = data.get('name')
+        email = data.get('email')
+        subject = data.get('subject')
+        message = data.get('message')
+        
+        if not all([name, email, subject, message]):
+            return jsonify({'error': 'All fields are required'}), 400
+        
+        # In a real application, you would:
+        # 1. Save to database
+        # 2. Send email notification
+        # 3. Add to support ticket system
+        
+        # For now, we'll just log it and return success
+        print(f"Contact Form Submission:")
+        print(f"Name: {name}")
+        print(f"Email: {email}")
+        print(f"Subject: {subject}")
+        print(f"Message: {message}")
+        print("-" * 50)
+        
+        # Optionally save to database
+        try:
+            contact_data = {
+                'name': name,
+                'email': email,
+                'subject': subject,
+                'message': message,
+                'timestamp': datetime.now().isoformat()
+            }
+            # You could add a save_contact method to db_manager if needed
+            # db_manager.save_contact(contact_data)
+        except Exception as e:
+            print(f"Error saving contact: {e}")
+        
+        return jsonify({
+            'message': 'Contact form submitted successfully',
+            'success': True
+        }), 200
+        
+    except Exception as e:
+        print(f"Error processing contact form: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
 def process_memory_logic(voice_text, image_path=None):
     """
     Core memory processing logic using Gemini

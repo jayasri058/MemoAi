@@ -25,12 +25,23 @@ document.addEventListener('DOMContentLoaded', function () {
     const searchBtn = document.getElementById('search-btn');
     const searchResults = document.getElementById('search-results');
 
+    // Camera elements
+    const useCameraBtn = document.getElementById('use-camera-btn');
+    const cameraContainer = document.getElementById('camera-container');
+    const cameraVideo = document.getElementById('camera-video');
+    const cameraCanvas = document.getElementById('camera-canvas');
+    const capturePhotoBtn = document.getElementById('capture-photo-btn');
+    const cancelCameraBtn = document.getElementById('cancel-camera-btn');
+    const toggleCameraBtn = document.getElementById('toggle-camera-btn');
+
     // State variables
     let isRecording = false;
     let recognition;
     let heroInterval;
     let silenceTimeout;
     let currentSearchResults = [];
+    let cameraStream = null;
+    let currentFacingMode = 'user'; // 'user' for front camera, 'environment' for back camera
 
     // Initialize speech recognition
     initializeSpeechRecognition();
@@ -39,7 +50,12 @@ document.addEventListener('DOMContentLoaded', function () {
     startRecordingBtn.addEventListener('click', toggleRecording);
     clearVoiceBtn.addEventListener('click', clearVoiceOutput);
     submitVoiceBtn.addEventListener('click', submitVoiceMemory);
-    uploadArea.addEventListener('click', () => imageUpload.click());
+    uploadArea.addEventListener('click', (e) => {
+        // Only trigger file upload if not clicking the camera button
+        if (e.target.id !== 'use-camera-btn' && !e.target.closest('#use-camera-btn')) {
+            imageUpload.click();
+        }
+    });
     imageUpload.addEventListener('change', handleImageUpload);
     submitImageBtn.addEventListener('click', submitImageMemory);
     clearImageBtn.addEventListener('click', clearImage);
@@ -50,6 +66,23 @@ document.addEventListener('DOMContentLoaded', function () {
             searchMemories();
         }
     });
+
+    // Camera event listeners
+    if (useCameraBtn) {
+        useCameraBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            startCamera();
+        });
+    }
+    if (capturePhotoBtn) {
+        capturePhotoBtn.addEventListener('click', capturePhoto);
+    }
+    if (cancelCameraBtn) {
+        cancelCameraBtn.addEventListener('click', stopCamera);
+    }
+    if (toggleCameraBtn) {
+        toggleCameraBtn.addEventListener('click', toggleCamera);
+    }
 
     // Mobile Menu Logic
     const hamburgerMenu = document.getElementById('hamburger-menu');
@@ -325,6 +358,99 @@ document.addEventListener('DOMContentLoaded', function () {
         imageDescriptionSection.style.display = 'none';
         imageDescription.value = '';
         imageSaveStatus.textContent = '';
+    }
+
+    // Camera Functions
+    async function startCamera() {
+        try {
+            // Request camera access with current facing mode
+            cameraStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: currentFacingMode },
+                audio: false
+            });
+
+            // Set video source to camera stream
+            cameraVideo.srcObject = cameraStream;
+
+            // Show camera container, hide upload area
+            uploadArea.style.display = 'none';
+            cameraContainer.style.display = 'block';
+
+        } catch (error) {
+            console.error('Error accessing camera:', error);
+            showError('Unable to access camera. Please check permissions.');
+        }
+    }
+
+    function capturePhoto() {
+        if (!cameraStream) {
+            showError('Camera is not active');
+            return;
+        }
+
+        // Set canvas dimensions to match video
+        cameraCanvas.width = cameraVideo.videoWidth;
+        cameraCanvas.height = cameraVideo.videoHeight;
+
+        // Draw current video frame to canvas
+        const context = cameraCanvas.getContext('2d');
+        context.drawImage(cameraVideo, 0, 0, cameraCanvas.width, cameraCanvas.height);
+
+        // Convert canvas to data URL (base64)
+        const imageDataUrl = cameraCanvas.toDataURL('image/png');
+
+        // Stop camera stream
+        stopCamera();
+
+        // Display captured image in preview
+        imagePreview.innerHTML = `<img src="${imageDataUrl}" alt="Captured photo">`;
+        imagePreview.style.display = 'block';
+
+        // Show description section (crucial step as per user requirement)
+        imageDescriptionSection.style.display = 'block';
+        imageDescription.focus();
+    }
+
+    async function toggleCamera() {
+        // Toggle between front and back camera
+        currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+
+        // Stop current stream
+        if (cameraStream) {
+            cameraStream.getTracks().forEach(track => track.stop());
+        }
+
+        // Restart camera with new facing mode
+        try {
+            cameraStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: currentFacingMode },
+                audio: false
+            });
+
+            cameraVideo.srcObject = cameraStream;
+        } catch (error) {
+            console.error('Error switching camera:', error);
+            showError('Unable to switch camera. Please try again.');
+            // Revert to previous mode if switch fails
+            currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+        }
+    }
+
+    function stopCamera() {
+        // Stop all video tracks
+        if (cameraStream) {
+            cameraStream.getTracks().forEach(track => track.stop());
+            cameraStream = null;
+        }
+
+        // Reset video source
+        if (cameraVideo) {
+            cameraVideo.srcObject = null;
+        }
+
+        // Hide camera container, show upload area
+        cameraContainer.style.display = 'none';
+        uploadArea.style.display = 'block';
     }
 
     // Process memory (connect to backend API)

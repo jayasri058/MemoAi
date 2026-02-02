@@ -48,6 +48,7 @@
                 <li><a href="#features">Features</a></li>
                 <li><a href="#demo">Demo</a></li>
                 <li><a href="#about">About</a></li>
+                <li><a href="contact.html">Contact</a></li>
                 <li><a href="login.html" id="nav-login">Login</a></li>
                 <li><a href="register.html" id="nav-register">Register</a></li>
                 <li><a href="#" id="nav-logout" style="display: none;">Logout</a></li>
@@ -147,6 +148,17 @@
                         <div class="upload-area" id="upload-area">
                             <p>Drag & drop an image here or click to upload</p>
                             <input type="file" id="image-upload" accept="image/*" hidden>
+                            <button id="use-camera-btn" class="secondary-btn" style="margin-top: 1rem;">📷 Use
+                                Camera</button>
+                        </div>
+                        <div id="camera-container" class="camera-container" style="display: none;">
+                            <video id="camera-video" autoplay playsinline></video>
+                            <canvas id="camera-canvas" style="display: none;"></canvas>
+                            <div class="camera-controls">
+                                <button id="toggle-camera-btn" class="secondary-btn" title="Switch Camera">🔄</button>
+                                <button id="capture-photo-btn" class="primary-btn">📸 Capture Photo</button>
+                                <button id="cancel-camera-btn" class="secondary-btn">Cancel</button>
+                            </div>
                         </div>
                         <div id="image-preview" class="image-preview"></div>
                         <div id="image-description-section" style="display: none;">
