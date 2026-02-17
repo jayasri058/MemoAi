@@ -5,7 +5,7 @@ datasets
 librosa 
 soundfile 
 sentence-transformers 
-chromadb 
+pinecone
 tiktoken 
 colorama
 
@@ -19,8 +19,11 @@ langchain-core
 # image captions
 pillow
 google-genai
-faiss-cpu
+google-generativeai
 flask
 flask-cors
+flask-limiter
 python-dotenv
 werkzeug
+PyPDF2
+passlib

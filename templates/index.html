@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MemoAI | Your Intelligent Life Memory</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+
+<body data-theme="dark">
+    <!-- Header/Navigation -->
+    <header>
+        <nav>
+            <div class="logo">
+                <i class="fas fa-brain"></i>
+                <span>MemoAI</span>
+            </div>
+            <div class="nav-links">
+                <a href="#home">Home</a>
+                <a href="#features">Features</a>
+                <a href="#demo">Demo</a>
+                <a href="#about">About</a>
+            </div>
+            <div class="theme-controls">
+                <button id="themeToggle" class="theme-toggle" title="Toggle Dark/Light Mode">
+                    <i class="fas fa-sun"></i>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container">
+        <!-- Hero Section -->
+        <section id="home" class="hero">
+            <div class="hero-content">
+                <h1>Never Forget <br><span class="highlight">A Great Idea</span> Again</h1>
+                <p>MemoAI captures your voice notes and images, categorizes them using AI, and lets you retrieve
+                    memories instantly through intelligent semantic search.</p>
+                <div class="cta-buttons">
+                    <button class="btn-primary" onclick="scrollToSection('demo')">Get Started</button>
+                    <a href="#features" class="btn-secondary">Learn More</a>
+                </div>
+            </div>
+            <div class="hero-image">
+                <div class="memory-card">
+                    <i class="fas fa-microphone"></i>
+                    <span>Voice</span>
+                </div>
+                <div class="memory-card">
+                    <i class="fas fa-image"></i>
+                    <span>Visual</span>
+                </div>
+                <div class="memory-card">
+                    <i class="fas fa-search"></i>
+                    <span>Search</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features" class="features">
+            <h2>Why MemoAI?</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <i class="fas fa-bolt"></i>
+                    <h3>Instant Capture</h3>
+                    <p>Record thoughts on the fly with high-accuracy voice processing and intelligent silence detection.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-tags"></i>
+                    <h3>Auto-Categorize</h3>
+                    <p>Our AI automatically understands the context of your notes and handles organization for you.</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-images"></i>
+                    <h3>Visual Memory</h3>
+                    <p>Capture and store visual information linked to your voice notes for comprehensive memory keeping.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-search-plus"></i>
+                    <h3>Intelligent Search</h3>
+                    <p>Find any memory using natural language queries with our semantic search technology.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Demo Section -->
+        <section id="demo" class="demo">
+            <h2>Interactive Demo</h2>
+            <div class="demo-container">
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="audio">Audio Processing</button>
+                    <button class="tab-btn" data-tab="image">Image Memory</button>
+                    <button class="tab-btn" data-tab="search">Memory Search</button>
+                </div>
+
+                <div class="tab-panes">
+                    <!-- Audio Recording Tab -->
+                    <div class="tab-content active" id="audio-tab">
+                        <div class="audio-section">
+                            <h3>Voice Memory Capture</h3>
+                            <div class="recording-controls">
+                                <div id="visualizerContainer" class="visualizer-container" style="display: none;">
+                                    <div class="bar"></div>
+                                    <div class="bar"></div>
+                                    <div class="bar"></div>
+                                    <div class="bar"></div>
+                                    <div class="bar"></div>
+                                    <div class="bar"></div>
+                                    <div class="bar"></div>
+                                    <div class="bar"></div>
+                                </div>
+                                <div class="control-buttons">
+                                    <button id="recordBtn" class="record-btn">
+                                        <i class="fas fa-microphone"></i>
+                                        <span>Record</span>
+                                    </button>
+                                    <button id="stopBtn" class="stop-btn" disabled>
+                                        <i class="fas fa-stop"></i>
+                                        <span>Stop</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="upload-section">
+                                <p>Or upload an audio file:</p>
+                                <input type="file" id="audioUpload" accept="audio/*" />
+                            </div>
+                            <div class="processing-indicator" id="audioProcessing" style="display: none;">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                <p>Processing your audio...</p>
+                            </div>
+                            <div class="results-container" id="audioResults" style="display: none;">
+                                <h4>Review & Edit Transcription:</h4>
+                                <div class="result-box" id="transcriptionResult" contenteditable="true"
+                                    style="border: 1px dashed var(--primary-color); padding: 1rem; margin-bottom: 1rem; outline: none;">
+                                </div>
+                                <h4>Category:</h4>
+                                <div class="result-box" id="categoryResult"></div>
+                                <div class="confirmation-controls" id="audioConfirmation"
+                                    style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+                                    <button id="confirmAudioBtn" class="btn-primary" style="flex: 2;">
+                                        <i class="fas fa-save"></i> Save Memory
+                                    </button>
+                                    <button id="retryAudioBtn" class="btn-secondary"
+                                        style="flex: 1; border-color: var(--danger); color: var(--danger);">
+                                        <i class="fas fa-redo"></i> Retry
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Image Upload Tab -->
+                    <div class="tab-content" id="image-tab">
+                        <div class="image-section">
+                            <h3>Image Memory Storage</h3>
+                            <div class="upload-section">
+                                <p>Upload an image to store with context:</p>
+                                <input type="file" id="imageUpload" accept="image/*" />
+                                <textarea id="imageContext"
+                                    placeholder="Describe what this image represents or add context..."></textarea>
+                                <button id="storeImageBtn" class="btn-primary"
+                                    style="margin-top: 1rem; width: 100%; border-radius: 12px; height: 50px;">
+                                    <i class="fas fa-cloud-upload-alt"></i> Analyze & Save Image
+                                </button>
+                            </div>
+                            <div class="processing-indicator" id="imageProcessing" style="display: none;">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                <p>Analyzing image and storing memory...</p>
+                            </div>
+                            <div class="results-container" id="imageResults" style="display: none;">
+                                <h4>Image Analysis:</h4>
+                                <div class="result-box" id="imageAnalysisResult"></div>
+                                <div class="status-box" id="storedMemoryResult"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Search Tab -->
+                    <div class="tab-content" id="search-tab">
+                        <div class="search-section">
+                            <h3>Retrieve Your Memories</h3>
+                            <div class="search-controls">
+                                <div class="search-bar">
+                                    <input type="text" id="searchQuery"
+                                        placeholder="Ask anything... e.g., 'What was my project idea?'">
+                                    <button id="searchBtn"><i class="fas fa-search"></i></button>
+                                </div>
+                                <div class="filters">
+                                    <select id="categoryFilter">
+                                        <option value="">All Categories</option>
+                                        <option value="Daily Life">Daily Life</option>
+                                        <option value="Work & Meetings">Work & Meetings</option>
+                                        <option value="Learning & Growth">Learning & Growth</option>
+                                        <option value="Health & Fitness">Health & Fitness</option>
+                                        <option value="Money & Shopping">Money & Shopping</option>
+                                        <option value="Entertainment & Leisure">Entertainment & Leisure</option>
+                                        <option value="Ideas & Creativity">Ideas & Creativity</option>
+                                        <option value="General">General</option>
+                                    </select>
+                                    <select id="typeFilter">
+                                        <option value="">All Types</option>
+                                        <option value="audio">Voice Notes</option>
+                                        <option value="image">Images</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="processing-indicator" id="searchProcessing" style="display: none;">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                <p>Searching your mind...</p>
+                            </div>
+                            <div id="searchResults" style="display: none;">
+                                <h4>Matches Found:</h4>
+                                <div class="results-list" id="searchResultsList">
+                                    <!-- Results will be injected here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- About Section -->
+        <section id="about" class="about">
+            <div class="about-content">
+                <h2>Behind MemoAI</h2>
+                <p>Built with state-of-the-art AI technology, MemoAI combines vector embeddings with large language
+                    models to create a searchable second brain for your daily life.</p>
+                <div class="tech-stack">
+                    <span class="tech-badge">Python</span>
+                    <span class="tech-badge">Flask</span>
+                    <span class="tech-badge">Vector DB</span>
+                    <span class="tech-badge">AI Transformers</span>
+                    <span class="tech-badge">Gemini-2.0</span>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 MemoAI. Powered by Artificial Intelligence.</p>
+        </div>
+    </footer>
+
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Custom Script -->
+    <script src="/static/js/script.js"></script>
+</body>
+
+</html>

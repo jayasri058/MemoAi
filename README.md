@@ -10,7 +10,7 @@ MemoAI is an intelligent personal memory assistant that helps you capture, categ
 - **🧠 Smart Categorization**: Automatically classify content into meaningful categories
 - **🖼️ Visual Memory**: Store and retrieve visual memories with context
 - **🔍 Intelligent Search**: Find memories using natural language queries
-- **💾 Local Storage**: Secure offline storage of your memories
+- **☁️ Cloud Storage**: Powered by Pinecone vector database
 - **📱 Responsive Design**: Works on all devices
 
 ## 🚀 Quick Start
@@ -20,6 +20,7 @@ MemoAI is an intelligent personal memory assistant that helps you capture, categ
 - Python 3.10 or higher
 - Node.js (for development server)
 - Google Gemini API Key (optional for enhanced features)
+- Pinecone API Key (required - sole database backend)
 
 ### Installation
 
@@ -59,13 +60,16 @@ Open your browser and navigate to `http://localhost:5000`
 ```
 memo-ai/
 ├── app.py              # Flask backend server
+├── models.py           # Database manager (Pinecone-backed)
+├── vector_store.py     # Unified Pinecone storage layer
+├── ai_services.py      # Gemini AI services
 ├── index.html          # Main HTML interface
 ├── script.js           # Frontend JavaScript logic
 ├── styles.css          # Styling and animations
 ├── requirements.txt    # Python dependencies
-├── .env.example       # Environment variables template
-├── .gitignore         # Git ignore rules
-└── uploads/           # Directory for uploaded images
+├── .env.example        # Environment variables template
+├── .gitignore          # Git ignore rules
+└── uploads/            # Directory for uploaded images
 ```
 
 ## 🔧 Configuration
@@ -77,6 +81,10 @@ Create a `.env` file with the following variables:
 ```env
 # Google Gemini API Key (optional)
 GEMINI_API_KEY=your_actual_api_key_here
+
+# Pinecone Configuration (REQUIRED)
+PINECONE_API_KEY=your_pinecone_api_key_here
+PINECONE_INDEX_NAME=memo-ai-index
 
 # Flask Configuration
 FLASK_ENV=development
@@ -117,7 +125,7 @@ gunicorn --bind 0.0.0.0:5000 app:app
 ## 🔒 Security
 
 - All API keys are stored in environment variables
-- User data is stored locally in browser storage
+- User data is stored securely in Pinecone cloud
 - Images are sanitized before processing
 - Input validation on all endpoints
 
@@ -137,7 +145,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - Google Gemini AI for natural language processing
 - Whisper ASR for speech recognition
-- FAISS for vector similarity search
+- Pinecone for vector similarity search and data storage
 - Sentence Transformers for embedding generation
 
 ## 📞 Support

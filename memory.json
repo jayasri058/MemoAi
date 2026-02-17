@@ -1,0 +1,27 @@
+[
+    {
+        "id": "02ba2ce3-1443-430b-a00e-b4b15cc15165",
+        "type": "audio",
+        "content": "I want to build the agentic IDE editor. Remember this project idea.",
+        "category": "Ideas & Creativity",
+        "timestamp": "2026-01-23T18:06:40.453046"
+    },
+    {
+        "id": "1d6ca232-48da-486c-8f75-83b59ac33cf9",
+        "type": "image",
+        "content": "This image captures a scene inside a textile shop, specifically a saree store.\n\n**Shop Type:** The text overlay at the bottom identifies the business as \"SREE KATHYAYANI SAREES CENTRE IN NANDYAL,\" confirming it is a saree shop. The visual evidence, with shelves stacked high with folded fabrics, supports this.\n\n**Items:**\n*   **Main Item:** The central focus is a large, ornate saree being unfolded on the floor for display. It is a light, shimmering silvery-green or pale gold color with an intricate, woven brocade pattern of what appears to be leaves or flowers. The saree has a wide, contrasting border in a dark blue or purple shade.\n*   **Other Items:** The background is filled with shelves packed with a vast inventory of other sarees. These are neatly folded and stacked, showcasing a wide array of colors including pinks, blues, greens, and oranges.\n\n**Visual Context:**\nThe scene is set indoors in a well-lit retail space with a light-colored tiled floor. A man, likely a shopkeeper, is sitting on the floor on a white sheet\u2014a common practice in Indian saree shops to display the full fabric. He is dressed in a light-yellow shirt and dark pants and is actively presenting the saree. To the right, the legs of another person, presumably a customer or another employee, can be seen sitting across from him. The overall impression is that of a product demonstration or a sales interaction in a traditional saree store. A purple text box at the bottom provides the shop's name, location, and a cell phone number.",
+        "context": "",
+        "category": "Money & Shopping",
+        "timestamp": "2026-01-23T18:09:20.544946",
+        "image_url": "/uploads/images/65748d0a-459c-4e96-9a15-4b9249b6b313_image.png"
+    },
+    {
+        "id": "262fa073-0cac-4c59-b781-50f2b1b5f171",
+        "type": "image",
+        "content": "Based on the image provided, here is a clear description:\n\n**Shop Type:**\nThe image is set inside a traditional Indian textile shop, specifically a saree store. Text at the bottom identifies it as \"SREE KATHYAYANI SAREES CENTRE IN NANDYAL,\" and a cell phone number is also provided.\n\n**Items:**\n*   **Main Item:** The central focus is a beautiful and ornate saree being displayed. It is a light, shimmery, pale green or silvery-grey color with an intricate, all-over woven brocade pattern. The saree has a prominent, contrasting border in a dark blue or purple hue, also featuring a detailed design.\n*   **Shop Inventory:** The background is filled with shelves stacked high with a vast and colorful assortment of folded sarees and other textiles, indicating a large inventory.\n\n**Visual Context:**\nThe scene depicts a typical interaction in a saree shop. A male shopkeeper, dressed in a light-yellow shirt, is sitting on the tiled floor and has unfolded the large saree to showcase its full design and quality. To the right, another person is partially visible, likely a customer or another staff member, sitting and observing the saree. The overall environment is that of a well-stocked, traditional retail store specializing in Indian ethnic wear.",
+        "context": "save the image , the image is a shop of sarees in nandyal",
+        "category": "Money & Shopping",
+        "timestamp": "2026-01-23T18:13:03.628341",
+        "image_url": "/uploads/images/24392b8a-964f-4de7-9ae0-2d57adea755e_image.png"
+    }
+]

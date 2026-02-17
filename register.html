@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script>
         // If already logged in, redirect to dashboard
-        if (localStorage.getItem('user')) {
+        if (sessionStorage.getItem('user')) {
             window.location.href = 'index.html';
         }
     </script>
@@ -37,8 +37,9 @@
                 <li><a href="index.html#features">Features</a></li>
                 <li><a href="index.html#demo">Demo</a></li>
                 <li><a href="index.html#about">About</a></li>
-                <li><a href="login.html">Login</a></li>
-                <li><a href="register.html" class="active">Register</a></li>
+                <li><a href="login.html" id="nav-login">Login</a></li>
+                <li><a href="register.html" id="nav-register" class="active">Register</a></li>
+                <li><a href="#" id="nav-logout" style="display: none;">Logout</a></li>
             </ul>
         </div>
     </nav>
@@ -83,8 +84,31 @@
                 </div>
                 <button type="submit" class="cta-btn full-width">Register</button>
             </form>
+
+            <div class="auth-divider">
+                <span>OR</span>
+            </div>
+
+            <div class="social-login-container">
+                <button type="button" class="social-btn" onclick="handleGoogleSignup()" title="Signup with Google">
+                    <i class="fab fa-google google-icon"></i>
+                </button>
+            </div>
+
             <div class="auth-footer">
                 <p>Already have an account? <a href="login.html">Login</a></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="account-selector-modal" id="accountModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Choose an account</h3>
+                <p>to continue to MemoAI</p>
+            </div>
+            <div class="account-list" id="accountList">
+                <!-- Accounts will be injected here -->
             </div>
         </div>
     </div>
@@ -135,6 +159,93 @@
                 btn.disabled = false;
                 btn.innerText = 'Register';
             }
+        });
+    </script>
+    <script>
+        let googleAccounts = [];
+
+        async function handleGoogleSignup() {
+            const btn = document.querySelector('.social-btn');
+            const originalContent = btn.innerHTML;
+
+            try {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin google-icon"></i>';
+
+                const response = await fetch('/api/auth/google/accounts');
+                const data = await response.json();
+
+                if (response.ok && data.accounts) {
+                    googleAccounts = data.accounts;
+                    showAccountModal(googleAccounts);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred during Google signup.');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalContent;
+            }
+        }
+
+        function showAccountModal(accounts) {
+            const modal = document.getElementById('accountModal');
+            const list = document.getElementById('accountList');
+
+            let accountsHTML = '';
+            accounts.forEach(account => {
+                const initial = account.name ? account.name.charAt(0).toUpperCase() : 'U';
+                accountsHTML += `
+                    <div class="account-item" onclick="proceedWithGoogleSignup('${account.email}')">
+                        <div class="account-avatar">${initial}</div>
+                        <div class="account-info">
+                            <span class="account-name">${account.name}</span>
+                            <span class="account-email">${account.email}</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            accountsHTML += `
+                <div class="account-item use-another-account" style="justify-content: center; border: none; padding: 0.75rem; margin-top: 0.5rem;" onclick="closeModal()">
+                    <i class="fas fa-user-plus" style="margin-right: 0.5rem; color: var(--primary-color);"></i>
+                    <span style="color: var(--text-secondary); font-size: 0.9rem;">Use another account</span>
+                </div>
+            `;
+
+            list.innerHTML = accountsHTML;
+            modal.style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('accountModal').style.display = 'none';
+        }
+
+        async function proceedWithGoogleSignup(email) {
+            try {
+                closeModal();
+                const response = await fetch('/api/auth/google', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    sessionStorage.setItem('user', JSON.stringify(data.user));
+                    localStorage.setItem('hasVisited', 'true');
+                    window.location.href = 'index.html';
+                } else {
+                    alert('Signup failed: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred during Google signup.');
+            }
+        }
+
+        document.getElementById('accountModal').addEventListener('click', function (e) {
+            if (e.target === this) closeModal();
         });
     </script>
 </body>

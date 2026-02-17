@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="styles.css">
     <script>
         // Check if user is logged in
-        const user = localStorage.getItem('user');
+        const user = sessionStorage.getItem('user');
         if (!user) {
             // Check if user has visited before
             const hasVisited = localStorage.getItem('hasVisited');
@@ -202,7 +202,14 @@
                     <h3>Search Memories</h3>
                     <div class="search-section">
                         <input type="text" id="search-query" placeholder="Enter keywords to search your memories...">
-                        <button id="search-btn" class="primary-btn">Search</button>
+                        <div class="search-actions">
+                            <button id="search-btn" class="primary-btn">Search</button>
+                            <button id="summary-btn" class="secondary-btn">✨ AI Summary</button>
+                        </div>
+                        <div id="summary-result" class="summary-result" style="display: none;">
+                            <h4>Recent Summary</h4>
+                            <p id="summary-text"></p>
+                        </div>
                         <div id="search-results" class="search-results">
                             <p class="no-results">No search results yet. Process some memories first!</p>
                         </div>

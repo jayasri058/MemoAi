@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script>
         // If already logged in, redirect to dashboard
-        if (localStorage.getItem('user')) {
+        if (sessionStorage.getItem('user')) {
             window.location.href = 'index.html';
         }
     </script>
@@ -37,8 +37,9 @@
                 <li><a href="index.html#features">Features</a></li>
                 <li><a href="index.html#demo">Demo</a></li>
                 <li><a href="index.html#about">About</a></li>
-                <li><a href="login.html" class="active">Login</a></li>
-                <li><a href="register.html">Register</a></li>
+                <li><a href="login.html" id="nav-login" class="active">Login</a></li>
+                <li><a href="register.html" id="nav-register">Register</a></li>
+                <li><a href="#" id="nav-logout" style="display: none;">Logout</a></li>
             </ul>
         </div>
     </nav>
@@ -127,8 +128,8 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    // Save user info to localStorage
-                    localStorage.setItem('user', JSON.stringify(data.user));
+                    // Save user info to sessionStorage
+                    sessionStorage.setItem('user', JSON.stringify(data.user));
                     alert('Login successful!');
                     window.location.href = 'index.html';
                 } else {
@@ -192,26 +193,26 @@
 
             // Create account items HTML
             let accountsHTML = '';
-            
+
             accounts.forEach(account => {
                 const initial = account.name ? account.name.charAt(0).toUpperCase() : 'U';
                 accountsHTML += `
-                    <div class="account-item" onclick="proceedWithGoogleLogin('${account.email}')">
-                        <div class="account-avatar">${initial}</div>
-                        <div class="account-info">
-                            <span class="account-name">${account.name}</span>
-                            <span class="account-email">${account.email}</span>
-                        </div>
-                    </div>
-                `;
+        <div class="account-item" onclick="proceedWithGoogleLogin('${account.email}')">
+            <div class="account-avatar">${initial}</div>
+            <div class="account-info">
+                <span class="account-name">${account.name}</span>
+                <span class="account-email">${account.email}</span>
+            </div>
+        </div>
+        `;
             });
 
             // Add "Use another account" option
             accountsHTML += `
-                <div class="account-item use-another-account" style="justify-content: center; border: none; padding: 0.75rem; margin-top: 0.5rem;" onclick="closeModal()">
-                    <i class="fas fa-user-plus" style="margin-right: 0.5rem; color: var(--primary-color);"></i>
-                    <span style="color: var(--text-secondary); font-size: 0.9rem;">Use another account</span>
-                </div>
+        <div class="account-item use-another-account" style="justify-content: center; border: none; padding: 0.75rem; margin-top: 0.5rem;" onclick="closeModal()">
+            <i class="fas fa-user-plus" style="margin-right: 0.5rem; color: var(--primary-color);"></i>
+            <span style="color: var(--text-secondary); font-size: 0.9rem;">Use another account</span>
+        </div>
             `;
 
             list.innerHTML = accountsHTML;
@@ -245,8 +246,8 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    // Save user info and redirect
-                    localStorage.setItem('user', JSON.stringify(data.user));
+                    // Save user info to sessionStorage and redirect
+                    sessionStorage.setItem('user', JSON.stringify(data.user));
                     window.location.href = 'index.html';
                 } else {
                     alert('Login failed: ' + (data.error || 'Unknown error'));

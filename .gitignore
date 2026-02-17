@@ -38,3 +38,5 @@ temp/
 implementation_plan.md
 
 .agent
+
+memoai.db

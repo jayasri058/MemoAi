@@ -24,6 +24,15 @@ document.addEventListener('DOMContentLoaded', function () {
     const searchQuery = document.getElementById('search-query');
     const searchBtn = document.getElementById('search-btn');
     const searchResults = document.getElementById('search-results');
+    const summaryBtn = document.getElementById('summary-btn');
+    const summaryResult = document.getElementById('summary-result');
+    const summaryText = document.getElementById('summary-text');
+
+    console.log('AI Summary elements initialization:', {
+        btn: !!summaryBtn,
+        result: !!summaryResult,
+        text: !!summaryText
+    });
 
     // Camera elements
     const useCameraBtn = document.getElementById('use-camera-btn');
@@ -46,26 +55,54 @@ document.addEventListener('DOMContentLoaded', function () {
     // Initialize speech recognition
     initializeSpeechRecognition();
 
-    // Event Listeners
-    startRecordingBtn.addEventListener('click', toggleRecording);
-    clearVoiceBtn.addEventListener('click', clearVoiceOutput);
-    submitVoiceBtn.addEventListener('click', submitVoiceMemory);
-    uploadArea.addEventListener('click', (e) => {
-        // Only trigger file upload if not clicking the camera button
-        if (e.target.id !== 'use-camera-btn' && !e.target.closest('#use-camera-btn')) {
-            imageUpload.click();
+    // Helper for secure API headers
+    function getAuthHeaders() {
+        const userString = sessionStorage.getItem('user');
+        if (!userString) return { 'Content-Type': 'application/json' };
+        try {
+            const user = JSON.parse(userString);
+            if (!user || !user.id) {
+                console.warn('User object found but no ID present');
+                return { 'Content-Type': 'application/json' };
+            }
+            return {
+                'Content-Type': 'application/json',
+                'X-User-Id': String(user.id)
+            };
+        } catch (e) {
+            return { 'Content-Type': 'application/json' };
         }
-    });
-    imageUpload.addEventListener('change', handleImageUpload);
-    submitImageBtn.addEventListener('click', submitImageMemory);
-    clearImageBtn.addEventListener('click', clearImage);
-    processBtn.addEventListener('click', processMemory);
-    searchBtn.addEventListener('click', searchMemories);
-    searchQuery.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            searchMemories();
-        }
-    });
+    }
+
+    // Event Listeners with defensive checks
+    if (startRecordingBtn) startRecordingBtn.addEventListener('click', toggleRecording);
+    if (clearVoiceBtn) clearVoiceBtn.addEventListener('click', clearVoiceOutput);
+    if (submitVoiceBtn) submitVoiceBtn.addEventListener('click', submitVoiceMemory);
+
+    if (uploadArea) {
+        uploadArea.addEventListener('click', (e) => {
+            // Only trigger file upload if not clicking the camera button
+            if (e.target.id !== 'use-camera-btn' && !e.target.closest('#use-camera-btn')) {
+                if (imageUpload) imageUpload.click();
+            }
+        });
+    }
+
+    if (imageUpload) imageUpload.addEventListener('change', handleImageUpload);
+    if (submitImageBtn) submitImageBtn.addEventListener('click', submitImageMemory);
+    if (clearImageBtn) clearImageBtn.addEventListener('click', clearImage);
+    if (processBtn) processBtn.addEventListener('click', processMemory);
+    if (searchBtn) searchBtn.addEventListener('click', searchMemories);
+    if (summaryBtn) {
+        summaryBtn.addEventListener('click', getMemorySummary);
+    }
+    if (searchQuery) {
+        searchQuery.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                searchMemories();
+            }
+        });
+    }
 
     // Camera event listeners
     if (useCameraBtn) {
@@ -98,15 +135,24 @@ document.addEventListener('DOMContentLoaded', function () {
     const navLogout = document.getElementById('nav-logout');
 
     // Check login status and update UI
-    const loggedInUser = localStorage.getItem('user');
+    const loggedInUser = sessionStorage.getItem('user');
+
     if (loggedInUser) {
-        if (navLogin) navLogin.parentElement.style.display = 'none';
-        if (navRegister) navRegister.parentElement.style.display = 'none';
-        if (navLogout) navLogout.style.display = 'block';
+        console.log('User is logged in, updating nav UI');
+        if (navLogin && navLogin.parentElement) navLogin.parentElement.style.display = 'none';
+        if (navRegister && navRegister.parentElement) navRegister.parentElement.style.display = 'none';
+        if (navLogout) {
+            navLogout.style.display = 'block';
+            if (navLogout.parentElement) navLogout.parentElement.style.display = 'block';
+        }
     } else {
-        if (navLogin) navLogin.parentElement.style.display = 'block';
-        if (navRegister) navRegister.parentElement.style.display = 'block';
-        if (navLogout) navLogout.style.display = 'none';
+        console.log('No logged in user found');
+        if (navLogin && navLogin.parentElement) navLogin.parentElement.style.display = 'block';
+        if (navRegister && navRegister.parentElement) navRegister.parentElement.style.display = 'block';
+        if (navLogout) {
+            navLogout.style.display = 'none';
+            if (navLogout.parentElement) navLogout.parentElement.style.display = 'none';
+        }
     }
 
     // Logout functionality
@@ -119,7 +165,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function logout() {
         // Clear user session
-        localStorage.removeItem('user');
+        sessionStorage.removeItem('user');
 
         // Show notification if possible
         alert('Logged out successfully');
@@ -175,8 +221,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
             recognition.onstart = () => {
                 console.log('Speech recognition started');
-                startRecordingBtn.classList.add('recording');
-                recordingStatus.textContent = 'Listening... Speak now';
+                if (startRecordingBtn) startRecordingBtn.classList.add('recording');
+                if (recordingStatus) recordingStatus.textContent = 'Listening... Speak now';
             };
 
             let lastResultTime = Date.now();
@@ -187,10 +233,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 for (let i = event.resultIndex; i < event.results.length; i++) {
                     transcript += event.results[i][0].transcript;
                 }
-                voiceOutput.value = transcript;
+                if (voiceOutput) voiceOutput.value = transcript;
 
                 // Enable the submit button when there's text
-                submitVoiceBtn.disabled = !transcript || transcript.trim() === '';
+                if (submitVoiceBtn) submitVoiceBtn.disabled = !transcript || transcript.trim() === '';
 
                 console.log('Recognized:', transcript);
 
@@ -211,7 +257,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             recognition.onerror = (event) => {
                 console.error('Speech recognition error:', event.error);
-                recordingStatus.textContent = `Error: ${event.error}`;
+                if (recordingStatus) recordingStatus.textContent = `Error: ${event.error}`;
                 stopRecording();
             };
 
@@ -221,13 +267,15 @@ document.addEventListener('DOMContentLoaded', function () {
             };
 
             // Update button state when user manually edits the text
-            voiceOutput.addEventListener('input', function () {
-                submitVoiceBtn.disabled = !this.value || this.value.trim() === '';
-            });
+            if (voiceOutput) {
+                voiceOutput.addEventListener('input', function () {
+                    if (submitVoiceBtn) submitVoiceBtn.disabled = !this.value || this.value.trim() === '';
+                });
+            }
         } else {
             console.warn('Speech Recognition not supported in this browser');
-            recordingStatus.textContent = 'Speech recognition not supported in your browser';
-            startRecordingBtn.disabled = true;
+            if (recordingStatus) recordingStatus.textContent = 'Speech recognition not supported in your browser';
+            if (startRecordingBtn) startRecordingBtn.disabled = true;
         }
     }
 
@@ -255,8 +303,8 @@ document.addEventListener('DOMContentLoaded', function () {
         if (recognition) {
             recognition.stop();
             isRecording = false;
-            startRecordingBtn.classList.remove('recording');
-            recordingStatus.textContent = 'Click mic to start recording';
+            if (startRecordingBtn) startRecordingBtn.classList.remove('recording');
+            if (recordingStatus) recordingStatus.textContent = 'Click mic to start recording';
         }
 
         // Clear the silence timeout if it exists
@@ -297,9 +345,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // Call backend API to process and save
         fetch('/api/process-memory', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: getAuthHeaders(),
             body: JSON.stringify(requestData)
         })
             .then(response => response.json())
@@ -449,8 +495,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         // Hide camera container, show upload area
-        cameraContainer.style.display = 'none';
-        uploadArea.style.display = 'block';
+        if (cameraContainer) cameraContainer.style.display = 'none';
+        if (uploadArea) uploadArea.style.display = 'block';
     }
 
     // Process memory (connect to backend API)
@@ -487,9 +533,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const response = await fetch('/api/process-memory', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: getAuthHeaders(),
                 body: JSON.stringify(requestData),
                 signal: controller.signal
             });
@@ -596,6 +640,42 @@ document.addEventListener('DOMContentLoaded', function () {
         }, 5000);
     }
 
+    async function getMemorySummary() {
+        console.log('AI Summary button clicked');
+        if (!summaryBtn) {
+            console.error('Summary button not found in DOM');
+            return;
+        }
+
+        summaryBtn.disabled = true;
+        summaryBtn.innerHTML = '<span class="spinner-small"></span> Analyzing...';
+
+        try {
+            const response = await fetch('/api/memories/summary', {
+                headers: getAuthHeaders()
+            });
+
+            if (!response.ok) throw new Error('Failed to get summary');
+
+            const data = await response.json();
+
+            if (summaryText) summaryText.textContent = data.summary;
+            if (summaryResult) {
+                summaryResult.style.display = 'block';
+                summaryResult.style.animation = 'slideUp 0.5s ease-out';
+                // Scroll result into view
+                summaryResult.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+
+        } catch (error) {
+            console.error('Summary error:', error);
+            showError('Could not generate summary. Ensure you have saved memories.');
+        } finally {
+            summaryBtn.disabled = false;
+            summaryBtn.textContent = '✨ AI Summary';
+        }
+    }
+
     // Search memories functionality
     async function searchMemories() {
         const query = searchQuery.value.trim().toLowerCase();
@@ -615,6 +695,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const response = await fetch(`/api/search-memories?q=${encodeURIComponent(query)}`, {
                 method: 'GET',
+                headers: getAuthHeaders(),
                 signal: controller.signal
             });
 
@@ -1343,6 +1424,39 @@ style.textContent = `
     /* Smooth scrolling for all elements */
     html {
         scroll-behavior: smooth;
+    }
+    
+    .summary-result {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 15px;
+        margin: 1.5rem 0;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        border-left: 4px solid #7c3aed;
+        animation: slideUp 0.5s ease-out;
+    }
+    
+    .summary-result h4 {
+        color: #7c3aed;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .summary-result h4::before {
+        content: '✨';
+    }
+    
+    .summary-result p {
+        line-height: 1.6;
+        color: #4b5563;
+        font-style: italic;
+    }
+    
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
     }
 `;
 document.head.appendChild(style);

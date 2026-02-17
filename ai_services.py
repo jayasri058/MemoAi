@@ -1,7 +1,14 @@
 
 import os
 import google.generativeai as genai
-from typing import Optional
+from typing import Optional, List
+try:
+    from transformers import BlipProcessor, BlipForConditionalGeneration
+    from PIL import Image
+    import torch
+    HAS_TRANSFORMERS = True
+except ImportError:
+    HAS_TRANSFORMERS = False
 
 class GeminiService:
     def __init__(self, api_key: str):
@@ -12,11 +19,22 @@ class GeminiService:
             
         try:
             genai.configure(api_key=api_key)
-            self.model = genai.GenerativeModel('gemini-1.5-flash')
-            print("Gemini Service initialized")
+            self.model = genai.GenerativeModel('gemini-2.5-flash')
+            print("Gemini Service initialized with gemini-2.5-flash")
         except Exception as e:
             print(f"Error initializing Gemini: {e}")
             self.model = None
+            
+        # Initialize fallback models if available
+        self.blip_processor = None
+        self.blip_model = None
+        if HAS_TRANSFORMERS:
+            try:
+                print("Initializing Hugging Face BLIP model for fallback...")
+                self.blip_processor = BlipProcessor.from_pretrained("Salesforce/blip-image-captioning-base")
+                self.blip_model = BlipForConditionalGeneration.from_pretrained("Salesforce/blip-image-captioning-base")
+            except Exception as e:
+                print(f"Failed to load HF fallback models: {e}")
 
     def describe_image(self, image_path: str) -> str:
         """
@@ -39,8 +57,26 @@ class GeminiService:
             )
             return result.text
         except Exception as e:
-            print(f"Error describing image: {e}")
-            return "Failed to analyze image."
+            print(f"Gemini analysis failed: {e}. Attempting local fallback...")
+            return self.fallback_describe_image(image_path)
+
+    def fallback_describe_image(self, image_path: str) -> str:
+        """
+        Fallback image description using local BLIP model (Hugging Face)
+        """
+        if not self.blip_model or not self.blip_processor:
+            return "Local image analysis fallback not available."
+            
+        try:
+            raw_image = Image.open(image_path).convert('RGB')
+            # unconditional image captioning
+            inputs = self.blip_processor(raw_image, return_tensors="pt")
+            out = self.blip_model.generate(**inputs, max_new_tokens=50)
+            description = self.blip_processor.decode(out[0], skip_special_tokens=True)
+            return f"{description} (Analyzed using local AI)"
+        except Exception as e:
+            print(f"Local fallback analysis failed: {e}")
+            return "Failed to analyze image with local fallback."
 
     def generate_tags(self, text: str) -> list[str]:
         """
