@@ -104,6 +104,43 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // Load memories from backend on dashboard load
+    async function loadMemoriesFromBackend() {
+        if (!searchResults) return;
+        const userString = sessionStorage.getItem('user');
+        if (!userString) return; // Not logged in
+
+        try {
+            searchResults.innerHTML = '<p class="no-results">Loading your memories...</p>';
+            const response = await fetch('/api/search-memories?q=*', {
+                headers: getAuthHeaders()
+            });
+            if (!response.ok) {
+                // Try a broad search fallback
+                const r2 = await fetch('/api/search-memories?q=memory', { headers: getAuthHeaders() });
+                if (!r2.ok) { searchResults.innerHTML = '<p class="no-results">Search for memories above.</p>'; return; }
+                const d2 = await r2.json();
+                currentSearchResults = d2.results || [];
+                if (currentSearchResults.length > 0) displaySearchResults(currentSearchResults);
+                else searchResults.innerHTML = '<p class="no-results">No memories yet. Start recording!</p>';
+                return;
+            }
+            const data = await response.json();
+            currentSearchResults = data.results || [];
+            if (currentSearchResults.length > 0) {
+                displaySearchResults(currentSearchResults);
+            } else {
+                searchResults.innerHTML = '<p class="no-results">No memories yet. Start recording!</p>';
+            }
+        } catch (e) {
+            console.log('Could not auto-load memories:', e);
+            searchResults.innerHTML = '<p class="no-results">Search for memories above.</p>';
+        }
+    }
+
+    // Auto-load memories when on dashboard
+    loadMemoriesFromBackend();
+
     // Camera event listeners
     if (useCameraBtn) {
         useCameraBtn.addEventListener('click', (e) => {
@@ -811,13 +848,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 // Check if this memory has an image
                 let imageHTML = '';
                 if (memory.stored_image_data) {
-                    // Display the actual image from stored data
                     imageHTML = '<img src="' + memory.stored_image_data + '" alt="Memory image" class="memory-image-preview">';
                 } else if (memory.image_path) {
-                    // Convert backslashes to forward slashes for web compatibility
-                    const imagePath = memory.image_path.replace(/\\/g, '/');
-                    // Try to fetch the image from the server
-                    imageHTML = `<img src="/${imagePath}" alt="Memory image" class="memory-image-preview" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'200\' height=\'150\'%3E%3Crect width=\'200\' height=\'150\' fill=\'%23e2e8f0\'/%3E%3Ctext x=\'50%\' y=\'50%\' text-anchor=\'middle\' dominant-baseline=\'middle\' fill=\'%2394a3b8\' font-size=\'12\'%3E🖼️ Image Not Found%3C/text%3E%3C/svg%3E'; this.title='Image not available: ${imagePath}'; this.onerror=null;">`;
+                    const imagePath = memory.image_path.replace(/\\/g, '/').replace(/^.*\/uploads\//, 'uploads/');
+                    imageHTML = `<img src="/${imagePath}" alt="Memory image" class="memory-image-preview" onerror="this.style.display='none'">`;
                 }
 
                 // Combine content, voice text and image description
@@ -833,7 +867,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 if (!contentText.trim()) contentText = 'No content';
 
-                resultsHTML += '<div class="memory-item" onclick="showMemoryDetails(' + memory.id + ')"' +
+                // Fixed: was missing closing > on onclick div
+                resultsHTML += '<div class="memory-item" onclick="showMemoryDetails(' + memory.id + ')">' +
                     '<div class="memory-title">' + (memory.title || 'Untitled Memory') + '</div>' +
                     '<div class="memory-content-with-image">' +
                     imageHTML +
@@ -844,7 +879,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     '</div>' +
                     '<div class="memory-meta">' +
                     '<span>Category: ' + (memory.category || 'Uncategorized') + '</span>' +
-                    '<span>Date: ' + (memory.date || new Date(memory.timestamp || Date.now()).toLocaleDateString()) + '</span>' +
+                    '<span>Date: ' + (memory.date || memory.created_at || new Date(memory.timestamp || Date.now()).toLocaleDateString()) + '</span>' +
                     (memory.image_path ? '<span>📷 Has Image</span>' : '') +
                     '</div>' +
                     '<div class="memory-tags">' +
@@ -1110,24 +1145,27 @@ document.addEventListener('DOMContentLoaded', function () {
             image_data: imageElement.src
         };
 
-        // Call backend API to process and save
+        // Call backend API to process and save — include auth headers!
         fetch('/api/process-memory', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: getAuthHeaders(),   // ← Fixed: was missing X-User-Id, causing 401
             body: JSON.stringify(requestData)
         })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => { throw new Error(err.error || `Server error: ${response.status}`); });
+                }
+                return response.json();
+            })
             .then(result => {
                 // Hide spinner and show success
                 imageSavingSpinner.style.display = 'none';
                 imageSaveStatus.textContent = 'Saved & Processed!';
 
                 // Update processing results section
-                categoryResult.textContent = result.category || 'Uncategorized';
-                contextResult.textContent = result.context || 'No context generated';
-                tagsResult.textContent = result.tags?.join(', ') || 'No tags generated';
+                if (categoryResult) categoryResult.textContent = result.category || 'Uncategorized';
+                if (contextResult) contextResult.textContent = result.context || 'No context generated';
+                if (tagsResult) tagsResult.textContent = result.tags?.join(', ') || 'No tags generated';
 
                 // Store in local memory for search
                 addToLocalMemory(result);
@@ -1144,7 +1182,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 console.error('Error processing image memory:', error);
                 imageSavingSpinner.style.display = 'none';
                 imageSaveStatus.textContent = 'Error saving';
-                showError('Failed to save image memory. Please try again.');
+                showError('Failed to save image memory: ' + error.message);
                 submitImageBtn.disabled = false;
             });
     }

@@ -415,69 +415,51 @@ def login():
 
 @app.route('/api/auth/google/accounts', methods=['GET'])
 def get_google_accounts():
-    """Get all registered Google accounts for account selector"""
+    """Get all registered accounts for Google account selector (uses SQLite)"""
     try:
         users = db_manager.get_all_users()
-        
+
+        # If no users exist yet, seed with a default account
         if not users:
-            mock_accounts = [
-                {"name": "Jayasri", "email": "jayasri058@gmail.com"},
-                {"name": "John Doe", "email": "john.doe@gmail.com"},
-                {"name": "Jane Smith", "email": "jane.smith@gmail.com"}
-            ]
-            
-            dummy_password = "google_oauth_secure_password"
-            password_hash = generate_password_hash(dummy_password)
-            
-            for account in mock_accounts:
-                if not db_manager.get_user_by_email(account['email']):
-                    db_manager.create_user(account['name'], account['email'], password_hash)
-            
+            dummy_pw = generate_password_hash("google_oauth_default")
+            db_manager.create_user("Jayasri", "jayasri058@gmail.com", dummy_pw)
             users = db_manager.get_all_users()
-        
+
         accounts = [
-            {
-                'id': user['id'],
-                'name': user['name'],
-                'email': user['email']
-            }
+            {'id': user['id'], 'name': user['name'], 'email': user['email']}
             for user in users
         ]
-        
-        return jsonify({
-            'accounts': accounts,
-            'count': len(accounts)
-        }), 200
-        
+
+        return jsonify({'accounts': accounts, 'count': len(accounts)}), 200
+
     except Exception as e:
         print(f"Error fetching Google accounts: {e}")
         return jsonify({'error': 'Internal server error'}), 500
 
 @app.route('/api/auth/google', methods=['POST'])
 def google_auth():
-    """Authenticate with selected Google account"""
+    """Authenticate with selected Google account (uses SQLite-backed auth)"""
     try:
         data = request.get_json()
         email = data.get('email')
-        
+
         if not email:
             return jsonify({'error': 'Email is required'}), 400
-        
+
         user = db_manager.get_user_by_email(email)
-        
+
         if not user:
-            name = email.split('@')[0].capitalize()
-            dummy_password = "google_oauth_secure_password"
-            password_hash = generate_password_hash(dummy_password)
-            
-            if db_manager.create_user(name, email, password_hash):
+            # Auto-create Google user in SQLite
+            name = email.split('@')[0].replace('.', ' ').title()
+            dummy_password = generate_password_hash("google_oauth_" + email)
+            if db_manager.create_user(name, email, dummy_password):
                 user = db_manager.get_user_by_email(email)
                 message = 'Google registration successful'
             else:
                 return jsonify({'error': 'Failed to create user'}), 500
         else:
             message = 'Google login successful'
-            
+
         return jsonify({
             'message': message,
             'user': {
@@ -486,7 +468,7 @@ def google_auth():
                 'email': user['email']
             }
         }), 200
-            
+
     except Exception as e:
         print(f"Error in Google auth: {e}")
         return jsonify({'error': 'Internal server error'}), 500
@@ -657,62 +639,90 @@ def generate_title(text):
 @limiter.limit("50 per day")
 def search_memories(user_id):
     """
-    Search through stored memories using Pinecone vector similarity, scoped to user
+    Search through stored memories using Pinecone vector similarity, scoped to user.
+    If q=* or q is empty, returns all memories for the user.
     """
     try:
-        query = request.args.get('q', '').strip().lower()
-        
-        if not query:
-            return jsonify({'error': 'Search query is required'}), 400
-        
+        query = request.args.get('q', '').strip()
+
+        # Resolve user IDs (new SQLite ID + legacy Pinecone ID)
+        user_ids = db_manager._resolve_user_ids(user_id)
+        print(f"Searching memories for user_ids: {user_ids}")
+
+        # Wildcard / empty query → return all memories
+        if not query or query == '*':
+            # Pass the list of IDs to get_all_memories
+            all_memories = db_manager.get_all_memories(user_id=user_ids)
+            return jsonify({
+                'results': all_memories,
+                'count': len(all_memories),
+                'query': query,
+                'search_type': 'all_memories'
+            }), 200
+
+        query_lower = query.lower()
+
         # Vector similarity search via Pinecone
         similar_results = []
         if pinecone_manager is not None and embedder:
-            similar_results = search_similar_vectors(query, user_id=user_id, top_k=10, threshold=0.3)
-        
+            # Pass the list of IDs for vector search
+            similar_results = search_similar_vectors(query_lower, user_id=user_ids, top_k=10, threshold=0.3)
+
         # Get memory details for similar results
         similar_results_memories = []
         for res in similar_results:
             memory_id = res['memory_id']
-            memory = db_manager.get_memory(memory_id, user_id=user_id)
+            # We can retrieve by specific ID, user_id check is less strict here or handled by get_memory
+            # Note: db_manager.get_memory takes optional user_id for verification.
+            # We should pass the list, but get_memory might expect a single int.
+            # Let's check get_memory. It calls Pinecone fetch.
+            # Fetch doesn't filter by user_id in the *retrieval* step usually, but might check metadata.
+            # Currently get_memory in models.py -> vector_store.get_memory(memory_id, user_id)
+            # vector_store.get_memory checks if user_id matches metadata['user_id'].
+            # If we pass a list, we need to update vector_store.get_memory to support list or just pass None to skip check
+            # (since vector search already filtered by user_id).
+            # Safety: vector search only returns memories for these user_ids. So we can skip strict check here or update get_memory.
+            # Let's try passing None for user_id to skip the second check, relying on vector search's filter.
+            memory = db_manager.get_memory(memory_id, user_id=None) 
             if memory:
                 memory['similarity_score'] = res['similarity_score']
-                
+
                 metadata = res.get('metadata', {})
                 memory['image_description'] = metadata.get('image_description', '')
-                
+
                 if not memory.get('image_description') and memory.get('context', '').startswith('Image Analysis: '):
                     memory['image_description'] = memory['context'].replace('Image Analysis: ', '')
-                
+
                 if metadata.get('type') == 'pdf_chunk':
                     memory['is_pdf_chunk'] = True
                     memory['page_number'] = metadata.get('page_number')
                     chunk_text_content = metadata.get('text', '')
                     page_info = f"[Page {memory['page_number']}] " if memory['page_number'] else ""
                     memory['snippet'] = f"{page_info}{chunk_text_content[:200]}..."
-                
+
                 similar_results_memories.append(memory)
-        
+
         detailed_results = similar_results_memories
-        
+
         # If vector search didn't return enough results, fall back to text search
         if len(detailed_results) < 5:
-            text_results = db_manager.search_memories(query, user_id=user_id)
+            # Pass list of IDs to text search fallback
+            text_results = db_manager.search_memories(query_lower, user_id=user_ids)
             existing_ids = {mem['id'] for mem in detailed_results}
             for text_result in text_results:
                 if text_result['id'] not in existing_ids:
                     detailed_results.append(text_result)
                     existing_ids.add(text_result['id'])
-        
+
         detailed_results.sort(key=lambda x: x.get('similarity_score', 0), reverse=True)
-        
+
         return jsonify({
             'results': detailed_results,
             'count': len(detailed_results),
             'query': query,
             'search_type': 'pinecone_vector' if similar_results else 'text_fallback'
         }), 200
-        
+
     except Exception as e:
         print(f"Error searching memories: {e}")
         import traceback

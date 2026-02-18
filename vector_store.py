@@ -7,7 +7,7 @@ Uses namespaces to separate user data from memory vectors.
 import os
 import time
 import uuid
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Union
 from pinecone import Pinecone, ServerlessSpec
 from datetime import datetime
 
@@ -122,9 +122,11 @@ class PineconeManager:
                 namespace=self.USERS_NAMESPACE
             )
 
-            vectors = result.get('vectors', {})
+            # Support both old (dict) and new (object) Pinecone SDK response
+            vectors = getattr(result, 'vectors', None) or result.get('vectors', {})
             if f"user_{email}" in vectors:
-                meta = vectors[f"user_{email}"]["metadata"]
+                entry = vectors[f"user_{email}"]
+                meta = getattr(entry, 'metadata', None) or entry.get('metadata', {})
                 return {
                     'id': meta.get('user_id'),
                     'name': meta.get('name'),
@@ -154,9 +156,14 @@ class PineconeManager:
                 namespace=self.USERS_NAMESPACE
             )
 
+            # Support both old (dict) and new (object) Pinecone SDK response
+            matches = getattr(results, 'matches', None)
+            if matches is None:
+                matches = results.get('matches', [])
+
             users = []
-            for match in results.get('matches', []):
-                meta = match.get('metadata', {})
+            for match in matches:
+                meta = getattr(match, 'metadata', None) or match.get('metadata', {})
                 users.append({
                     'id': meta.get('user_id'),
                     'name': meta.get('name'),
@@ -260,9 +267,11 @@ class PineconeManager:
                 namespace=self.MEMORIES_NAMESPACE
             )
 
-            vectors = result.get('vectors', {})
+            # Support both old (dict) and new (object) Pinecone SDK response
+            vectors = getattr(result, 'vectors', None) or result.get('vectors', {})
             if str(memory_id) in vectors:
-                meta = vectors[str(memory_id)].get('metadata', {})
+                entry = vectors[str(memory_id)]
+                meta = getattr(entry, 'metadata', None) or entry.get('metadata', {})
 
                 # Check user_id scoping
                 if user_id and meta.get('user_id') != user_id:
@@ -274,9 +283,9 @@ class PineconeManager:
             print(f"Error fetching memory: {e}")
             return None
 
-    def get_all_memories(self, user_id: Optional[int] = None) -> List[Dict]:
+    def get_all_memories(self, user_id: Optional[Union[int, List[int]]] = None) -> List[Dict]:
         """
-        Get all memories for a user. 
+        Get all memories for a user (or list of user IDs).
         Uses a query with zero vector and user_id filter.
         """
         if not self.index:
@@ -285,8 +294,15 @@ class PineconeManager:
         try:
             dummy_vector = [0.0] * self.dimension
             filter_dict = {}
-            if user_id:
-                filter_dict["user_id"] = {"$eq": user_id}
+            
+            # Handle single ID or list of IDs
+            if user_id is not None:
+                if isinstance(user_id, list):
+                    # Filter by any of the IDs in the list
+                    filter_dict["user_id"] = {"$in": user_id}
+                else:
+                    filter_dict["user_id"] = {"$eq": user_id}
+            
             # Exclude chunks - only get main memories
             filter_dict["type"] = {"$ne": "pdf_chunk"}
 
@@ -298,9 +314,14 @@ class PineconeManager:
                 namespace=self.MEMORIES_NAMESPACE
             )
 
+            # Support both old (dict) and new (object) Pinecone SDK response
+            matches = getattr(results, 'matches', None)
+            if matches is None:
+                matches = results.get('matches', [])
+
             memories = []
-            for match in results.get('matches', []):
-                meta = match.get('metadata', {})
+            for match in matches:
+                meta = getattr(match, 'metadata', None) or match.get('metadata', {})
                 memories.append(self._metadata_to_memory(meta))
 
             # Sort by created_at descending
@@ -327,15 +348,20 @@ class PineconeManager:
 
         return results
 
-    def query_similarity(self, vector: List[float], user_id: int, top_k: int = 5, threshold: float = 0.3) -> List[Dict]:
+    def query_similarity(self, vector: List[float], user_id: Union[int, List[int]], top_k: int = 5, threshold: float = 0.3) -> List[Dict]:
         """
-        Query Pinecone for similar vectors, scoped by user_id.
+        Query Pinecone for similar vectors, scoped by user_id efficiently.
+        user_id can be a single int or a list of ints (for legacy migration support).
         """
         if not self.index:
             return []
 
         try:
-            filter_dict = {"user_id": {"$eq": user_id}}
+            filter_dict = {}
+            if isinstance(user_id, list):
+                filter_dict["user_id"] = {"$in": user_id}
+            else:
+                filter_dict["user_id"] = {"$eq": user_id}
 
             results = self.index.query(
                 vector=vector,
@@ -345,14 +371,23 @@ class PineconeManager:
                 namespace=self.MEMORIES_NAMESPACE
             )
 
+            # Support both old (dict) and new (object) Pinecone SDK response
+            raw_matches = getattr(results, 'matches', None)
+            if raw_matches is None:
+                raw_matches = results.get('matches', [])
+
             matches = []
-            for match in results.get('matches', []):
-                score = match.get('score', 0)
+            for match in raw_matches:
+                score = getattr(match, 'score', None)
+                if score is None:
+                    score = match.get('score', 0)
                 if score >= threshold:
+                    meta = getattr(match, 'metadata', None) or match.get('metadata', {})
+                    match_id = getattr(match, 'id', None) or match.get('id', '')
                     matches.append({
-                        'id': match['id'],
+                        'id': match_id,
                         'score': score,
-                        'metadata': match.get('metadata', {})
+                        'metadata': meta
                     })
 
             return matches
@@ -403,12 +438,13 @@ class PineconeManager:
                 namespace=self.MEMORIES_NAMESPACE
             )
 
-            vectors = result.get('vectors', {})
+            # Support both old (dict) and new (object) Pinecone SDK response
+            vectors = getattr(result, 'vectors', None) or result.get('vectors', {})
             if str(memory_id) not in vectors:
                 return False
 
             existing = vectors[str(memory_id)]
-            meta = existing.get('metadata', {})
+            meta = getattr(existing, 'metadata', None) or existing.get('metadata', {})
 
             # Check user ownership
             if user_id and meta.get('user_id') != user_id:
@@ -425,7 +461,7 @@ class PineconeManager:
             meta['updated_at'] = datetime.now().isoformat()
 
             # Re-upsert with same vector but updated metadata
-            existing_vector = existing.get('values', [0.0] * self.dimension)
+            existing_vector = getattr(existing, 'values', None) or existing.get('values', [0.0] * self.dimension)
             self.index.upsert(
                 vectors=[(str(memory_id), existing_vector, meta)],
                 namespace=self.MEMORIES_NAMESPACE
