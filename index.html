@@ -10,6 +10,9 @@
     <meta name="theme-color" content="#2563eb">
     <title>MemoAI - Intelligent Personal Memory Assistant</title>
     <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script>
         // Check if user is logged in
         const user = sessionStorage.getItem('user');
@@ -383,6 +386,44 @@
             <p>&copy; 2024 MemoAI - Intelligent Personal Memory Assistant</p>
         </div>
     </footer>
+
+    <!-- Payment Modal -->
+    <div id="payment-modal" class="modal payment-modal">
+        <div class="modal-content glass">
+            <div class="modal-header">
+                <div class="premium-badge"><i class="fas fa-crown"></i> Premium</div>
+                <h2>Upgrade to Premium</h2>
+                <p>You've reached your free limit of 10 memories. Upgrade now for unlimited storage and advanced AI
+                    features.</p>
+                <span class="close-modal" id="close-payment-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="pricing-card">
+                    <div class="price-header">
+                        <span class="currency">₹</span>
+                        <span class="amount" id="premium-amount">299</span>
+                        <span class="period">/month</span>
+                    </div>
+                    <ul class="features-list">
+                        <li><i class="fas fa-check-circle"></i> Unlimited Memories</li>
+                        <li><i class="fas fa-check-circle"></i> Advanced AI Analysis</li>
+                        <li><i class="fas fa-check-circle"></i> Priority Processing</li>
+                        <li><i class="fas fa-check-circle"></i> Early access to new features</li>
+                    </ul>
+                    <button id="pay-now-btn" class="cta-btn">Pay Now with Razorpay</button>
+                </div>
+                <div class="payment-security">
+                    <p><i class="fas fa-shield-alt"></i> Secure Payment Gateway</p>
+                    <div class="payment-icons">
+                        <i class="fab fa-cc-visa"></i>
+                        <i class="fab fa-cc-mastercard"></i>
+                        <i class="fab fa-google-pay"></i>
+                        <i class="fas fa-money-check-alt"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="script.js"></script>
 </body>

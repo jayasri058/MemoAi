@@ -7,104 +7,250 @@
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#2563eb">
+    <meta name="theme-color" content="#6C63FF">
     <title>Contact Us - MemoAI</title>
     <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <style>
-        /* Contact Page Specific Styles */
+        /* ---- Contact Page Specific ---- */
         .contact-section {
             min-height: 100vh;
-            padding: 120px 20px 60px;
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            padding: 120px 24px 80px;
+            background:
+                radial-gradient(ellipse 80% 50% at 50% -10%, rgba(108, 99, 255, 0.28) 0%, transparent 65%),
+                radial-gradient(ellipse 60% 40% at 90% 90%, rgba(247, 37, 133, 0.12) 0%, transparent 55%),
+                var(--bg);
         }
 
-        .contact-container {
-            max-width: 800px;
+        .contact-wrapper {
+            max-width: 960px;
             margin: 0 auto;
-            background: white;
-            padding: 3rem;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
         }
 
+        /* Page Header */
         .contact-header {
             text-align: center;
-            margin-bottom: 3rem;
+            margin-bottom: 3.5rem;
+        }
+
+        .contact-header .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(108, 99, 255, 0.15);
+            border: 1px solid rgba(108, 99, 255, 0.35);
+            color: var(--primary-light);
+            padding: 0.4rem 1.1rem;
+            border-radius: 50px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-bottom: 1.25rem;
         }
 
         .contact-header h1 {
-            font-size: 2.5rem;
-            color: var(--text-primary);
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 800;
+            letter-spacing: -1px;
+            line-height: 1.15;
             margin-bottom: 1rem;
+            background: linear-gradient(135deg, #fff 0%, var(--primary-light) 50%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .contact-header p {
-            font-size: 1.1rem;
+            font-size: 1.05rem;
             color: var(--text-secondary);
+            max-width: 520px;
+            margin: 0 auto;
+            line-height: 1.7;
         }
 
+        /* Main Grid */
+        .contact-grid {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        /* Form Card */
+        .contact-form-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 2.5rem;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        .contact-form-card h2 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .contact-form-card h2 i {
+            color: var(--primary-light);
+            font-size: 1.1rem;
+        }
+
+        /* Form Fields */
         .contact-form {
             display: flex;
             flex-direction: column;
-            gap: 1.5rem;
+            gap: 1.25rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
         }
 
         .form-group {
             display: flex;
             flex-direction: column;
-            gap: 0.5rem;
+            gap: 0.45rem;
         }
 
         .form-group label {
+            font-size: 0.85rem;
             font-weight: 600;
-            color: var(--text-primary);
-            font-size: 0.95rem;
+            color: var(--text-secondary);
+            letter-spacing: 0.3px;
+        }
+
+        .form-group .field-icon {
+            position: relative;
+        }
+
+        .form-group .field-icon i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            pointer-events: none;
+        }
+
+        .form-group .field-icon textarea+i,
+        .form-group.area-group .field-icon i {
+            top: 1.1rem;
+            transform: none;
         }
 
         .form-group input,
         .form-group textarea {
-            padding: 0.875rem 1rem;
-            border: 2px solid #e2e8f0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 10px;
-            font-size: 1rem;
+            padding: 0.85rem 1rem 0.85rem 2.8rem;
+            font-size: 0.95rem;
             font-family: inherit;
+            color: var(--text-primary);
             transition: all 0.3s ease;
+        }
+
+        .form-group textarea {
+            min-height: 140px;
+            resize: vertical;
+            padding-top: 0.85rem;
+        }
+
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: rgba(177, 174, 200, 0.4);
         }
 
         .form-group input:focus,
         .form-group textarea:focus {
             outline: none;
-            border-color: #7c3aed;
-            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.09);
+            box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.18);
         }
 
-        .form-group textarea {
-            min-height: 150px;
-            resize: vertical;
+        /* Alert messages */
+        .alert {
+            padding: 1rem 1.25rem;
+            border-radius: 10px;
+            font-size: 0.92rem;
+            font-weight: 500;
+            display: none;
+            align-items: center;
+            gap: 0.6rem;
         }
 
-        /* Custom Purple Button Styling as per user requirements */
+        .alert-success {
+            background: rgba(6, 214, 160, 0.12);
+            border: 1px solid rgba(6, 214, 160, 0.35);
+            color: var(--accent-green);
+        }
+
+        .alert-error {
+            background: rgba(239, 35, 60, 0.1);
+            border: 1px solid rgba(239, 35, 60, 0.3);
+            color: #ff6b81;
+        }
+
+        /* Submit Button */
         .contact-submit-btn {
-            background: #7c3aed;
-            /* Purple background */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
             color: white;
-            /* White text */
             border: none;
             padding: 1rem 2rem;
-            font-size: 1.1rem;
-            font-weight: 600;
+            font-size: 1rem;
+            font-weight: 700;
             border-radius: 50px;
-            /* Rounded button */
             cursor: pointer;
             transition: all 0.3s ease;
-            margin-top: 1rem;
-            box-shadow: 0 8px 20px rgba(124, 58, 237, 0.3);
+            margin-top: 0.5rem;
+            box-shadow: 0 6px 25px rgba(108, 99, 255, 0.4);
+            letter-spacing: 0.3px;
+            font-family: inherit;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .contact-submit-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--primary) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
 
         .contact-submit-btn:hover {
-            background: #6d28d9;
             transform: translateY(-2px);
-            box-shadow: 0 12px 30px rgba(124, 58, 237, 0.4);
+            box-shadow: 0 12px 35px rgba(108, 99, 255, 0.55);
+        }
+
+        .contact-submit-btn:hover::before {
+            opacity: 1;
+        }
+
+        .contact-submit-btn>* {
+            position: relative;
+            z-index: 1;
         }
 
         .contact-submit-btn:active {
@@ -112,76 +258,170 @@
         }
 
         .contact-submit-btn:disabled {
-            background: #a78bfa;
+            opacity: 0.55;
             cursor: not-allowed;
             transform: none;
         }
 
-        .contact-info {
-            margin-top: 3rem;
-            padding-top: 2rem;
-            border-top: 2px solid #e2e8f0;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 2rem;
-            text-align: center;
-        }
-
-        .info-item {
+        /* Sidebar */
+        .contact-sidebar {
             display: flex;
             flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        /* Info Cards */
+        .info-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 1.75rem;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            transition: all 0.35s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .info-card:hover {
+            border-color: rgba(108, 99, 255, 0.4);
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(108, 99, 255, 0.18);
+        }
+
+        .info-card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
             align-items: center;
-            gap: 0.5rem;
+            justify-content: center;
+            font-size: 1.35rem;
+            margin-bottom: 1rem;
+            flex-shrink: 0;
         }
 
-        .info-icon {
-            font-size: 2rem;
-            color: #7c3aed;
+        .icon-purple {
+            background: rgba(108, 99, 255, 0.2);
         }
 
-        .info-item h3 {
+        .icon-pink {
+            background: rgba(247, 37, 133, 0.2);
+        }
+
+        .icon-teal {
+            background: rgba(76, 201, 240, 0.2);
+        }
+
+        .icon-green {
+            background: rgba(6, 214, 160, 0.2);
+        }
+
+        .info-card h3 {
             font-size: 1rem;
+            font-weight: 700;
             color: var(--text-primary);
-            margin: 0;
+            margin-bottom: 0.3rem;
         }
 
-        .info-item p {
-            font-size: 0.9rem;
+        .info-card p {
+            font-size: 0.88rem;
             color: var(--text-secondary);
+            line-height: 1.55;
             margin: 0;
         }
 
-        .success-message {
-            background: #10b981;
-            color: white;
-            padding: 1rem;
-            border-radius: 10px;
-            text-align: center;
-            margin-bottom: 1rem;
-            display: none;
+        .info-card a {
+            color: var(--primary-light);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
         }
 
-        .error-message {
-            background: #ef4444;
-            color: white;
-            padding: 1rem;
-            border-radius: 10px;
-            text-align: center;
-            margin-bottom: 1rem;
-            display: none;
+        .info-card a:hover {
+            color: var(--accent);
         }
 
+        /* Social row */
+        .social-row {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 1.5rem;
+            backdrop-filter: blur(16px);
+        }
+
+        .social-row h3 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 1rem;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .social-link {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .social-link:hover {
+            background: rgba(108, 99, 255, 0.2);
+            border-color: var(--primary);
+            color: var(--primary-light);
+            transform: translateY(-3px);
+        }
+
+        /* Responsive */
         @media (max-width: 768px) {
-            .contact-container {
-                padding: 2rem 1.5rem;
-            }
-
-            .contact-header h1 {
-                font-size: 2rem;
-            }
-
-            .contact-info {
+            .contact-grid {
                 grid-template-columns: 1fr;
+            }
+
+            .contact-sidebar {
+                order: -1;
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+
+            .info-card {
+                flex: 1 1 180px;
+            }
+
+            .social-row {
+                flex: 100%;
+            }
+        }
+
+        @media (max-width: 560px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .contact-form-card {
+                padding: 1.75rem 1.25rem;
+            }
+
+            .contact-section {
+                padding: 100px 16px 60px;
+            }
+
+            .contact-sidebar {
+                flex-direction: column;
             }
         }
     </style>
@@ -214,57 +454,113 @@
 
     <!-- Contact Section -->
     <section class="contact-section">
-        <div class="contact-container">
+        <div class="contact-wrapper">
+
+            <!-- Header -->
             <div class="contact-header">
+                <div class="badge">
+                    <i class="fas fa-envelope"></i> Contact Us
+                </div>
                 <h1>Get in Touch</h1>
-                <p>Have questions or feedback? We'd love to hear from you!</p>
+                <p>Have questions or feedback? We'd love to hear from you. Send us a message and we'll get back to you
+                    as soon as possible.</p>
             </div>
 
-            <div id="success-message" class="success-message"></div>
-            <div id="error-message" class="error-message"></div>
+            <!-- Grid -->
+            <div class="contact-grid">
 
-            <form class="contact-form" id="contact-form">
-                <div class="form-group">
-                    <label for="name">Full Name *</label>
-                    <input type="text" id="name" name="name" required placeholder="Enter your full name">
+                <!-- Form -->
+                <div class="contact-form-card">
+                    <h2><i class="fas fa-paper-plane"></i> Send a Message</h2>
+
+                    <div id="success-message" class="alert alert-success">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Thank you! Your message has been sent. We'll get back to you soon.</span>
+                    </div>
+                    <div id="error-message" class="alert alert-error">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span>Sorry, something went wrong. Please try again later.</span>
+                    </div>
+
+                    <form class="contact-form" id="contact-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="name">Full Name *</label>
+                                <div class="field-icon">
+                                    <i class="fas fa-user"></i>
+                                    <input type="text" id="name" name="name" required placeholder="John Doe">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="email">Email Address *</label>
+                                <div class="field-icon">
+                                    <i class="fas fa-envelope"></i>
+                                    <input type="email" id="email" name="email" required placeholder="john@example.com">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="subject">Subject *</label>
+                            <div class="field-icon">
+                                <i class="fas fa-tag"></i>
+                                <input type="text" id="subject" name="subject" required
+                                    placeholder="What is this regarding?">
+                            </div>
+                        </div>
+
+                        <div class="form-group area-group">
+                            <label for="message">Message *</label>
+                            <div class="field-icon">
+                                <i class="fas fa-comment-alt"></i>
+                                <textarea id="message" name="message" required
+                                    placeholder="Tell us more about your inquiry..."></textarea>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="contact-submit-btn" id="submit-btn">
+                            <i class="fas fa-paper-plane"></i>
+                            <span>Send Message</span>
+                        </button>
+                    </form>
                 </div>
 
-                <div class="form-group">
-                    <label for="email">Email Address *</label>
-                    <input type="email" id="email" name="email" required placeholder="your.email@example.com">
-                </div>
+                <!-- Sidebar -->
+                <div class="contact-sidebar">
+                    <div class="info-card">
+                        <div class="info-card-icon icon-purple">📧</div>
+                        <h3>Email Us</h3>
+                        <p><a href="mailto:support@memoai.com">support@memoai.com</a></p>
+                    </div>
 
-                <div class="form-group">
-                    <label for="subject">Subject *</label>
-                    <input type="text" id="subject" name="subject" required placeholder="What is this regarding?">
-                </div>
+                    <div class="info-card">
+                        <div class="info-card-icon icon-teal">💬</div>
+                        <h3>Live Support</h3>
+                        <p>Available 24/7 for urgent queries and technical help.</p>
+                    </div>
 
-                <div class="form-group">
-                    <label for="message">Message *</label>
-                    <textarea id="message" name="message" required
-                        placeholder="Tell us more about your inquiry..."></textarea>
-                </div>
+                    <div class="info-card">
+                        <div class="info-card-icon icon-green">⚡</div>
+                        <h3>Response Time</h3>
+                        <p>We typically respond within <strong style="color:var(--accent-green);">2 hours</strong>
+                            during business hours.</p>
+                    </div>
 
-                <button type="submit" class="contact-submit-btn" id="submit-btn">
-                    Send Message
-                </button>
-            </form>
+                    <div class="info-card">
+                        <div class="info-card-icon icon-pink">🌍</div>
+                        <h3>Global Service</h3>
+                        <p>Serving users worldwide across all time zones.</p>
+                    </div>
 
-            <div class="contact-info">
-                <div class="info-item">
-                    <div class="info-icon">📧</div>
-                    <h3>Email</h3>
-                    <p>support@memoai.com</p>
-                </div>
-                <div class="info-item">
-                    <div class="info-icon">💬</div>
-                    <h3>Support</h3>
-                    <p>24/7 Customer Support</p>
-                </div>
-                <div class="info-item">
-                    <div class="info-icon">🌍</div>
-                    <h3>Location</h3>
-                    <p>Global Service</p>
+                    <div class="social-row">
+                        <h3>Follow Us</h3>
+                        <div class="social-links">
+                            <a href="#" class="social-link" title="Twitter/X"><i class="fab fa-x-twitter"></i></a>
+                            <a href="#" class="social-link" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                            <a href="#" class="social-link" title="GitHub"><i class="fab fa-github"></i></a>
+                            <a href="#" class="social-link" title="Discord"><i class="fab fa-discord"></i></a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -279,15 +575,14 @@
 
     <script src="script.js"></script>
     <script>
-        // Contact form handling
         document.getElementById('contact-form').addEventListener('submit', async function (e) {
             e.preventDefault();
 
             const submitBtn = document.getElementById('submit-btn');
-            const successMessage = document.getElementById('success-message');
-            const errorMessage = document.getElementById('error-message');
+            const successMsg = document.getElementById('success-message');
+            const errorMsg = document.getElementById('error-message');
+            const btnText = submitBtn.querySelector('span');
 
-            // Get form data
             const formData = {
                 name: document.getElementById('name').value,
                 email: document.getElementById('email').value,
@@ -295,37 +590,33 @@
                 message: document.getElementById('message').value
             };
 
-            // Disable button and show loading state
             submitBtn.disabled = true;
-            submitBtn.textContent = 'Sending...';
-            successMessage.style.display = 'none';
-            errorMessage.style.display = 'none';
+            btnText.textContent = 'Sending...';
+            successMsg.style.display = 'none';
+            errorMsg.style.display = 'none';
 
             try {
                 const response = await fetch('/api/contact', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(formData)
                 });
 
                 const result = await response.json();
 
                 if (response.ok) {
-                    successMessage.textContent = 'Thank you! Your message has been sent successfully. We\'ll get back to you soon.';
-                    successMessage.style.display = 'block';
+                    successMsg.style.display = 'flex';
                     document.getElementById('contact-form').reset();
+                    successMsg.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 } else {
                     throw new Error(result.error || 'Failed to send message');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                errorMessage.textContent = 'Sorry, there was an error sending your message. Please try again later.';
-                errorMessage.style.display = 'block';
+                errorMsg.style.display = 'flex';
             } finally {
                 submitBtn.disabled = false;
-                submitBtn.textContent = 'Send Message';
+                btnText.textContent = 'Send Message';
             }
         });
     </script>

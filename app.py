@@ -55,8 +55,10 @@ limiter = Limiter(
 def ratelimit_handler(e):
     return jsonify({
         "error": "Rate limit exceeded",
-        "message": "You have reached your daily limit of 10 AI requests. Please try again tomorrow."
+        "message": "Too many requests. Please try again later."
     }), 429
+
+MEMORY_FREE_LIMIT = 10  # Free tier: 10 memories per account
 
 # Load environment variables
 load_dotenv()
@@ -261,24 +263,36 @@ def serve_static(path):
 
 @app.route('/api/process-memory', methods=['POST'])
 @login_required
-@limiter.limit("10 per day")
 def process_memory(user_id):
     """
     Process memory input (voice text + optional image)
     Returns categorized memory with context and tags, scoped to user_id
+    Enforces a per-account limit of 10 memories for free users.
     """
     try:
+        # --- Per-account memory limit check ---
+        count, is_premium = db_manager.get_memory_count(user_id)
+        if not is_premium and count >= MEMORY_FREE_LIMIT:
+            return jsonify({
+                'error': 'Memory limit reached',
+                'payment_required': True,
+                'memories_used': count,
+                'limit': MEMORY_FREE_LIMIT,
+                'message': f'You have used all {MEMORY_FREE_LIMIT} free memories. Upgrade to Premium for unlimited access.'
+            }), 402
+
         data = request.get_json()
-        
+
         if not data:
             return jsonify({'error': 'No data provided'}), 400
-            
+
         voice_text = data.get('voice_text', '').strip()
         has_image = data.get('has_image', False)
         image_data = data.get('image_data', None)
-        
+
         if not voice_text:
             return jsonify({'error': 'Voice text is required'}), 400
+
         
         # Save image if provided
         image_path = None
@@ -345,7 +359,13 @@ def process_memory(user_id):
         result['id'] = memory_id
         result['timestamp'] = datetime.now().isoformat()
         result['processed_successfully'] = True
-        
+
+        # Increment per-user memory count
+        new_count = db_manager.increment_memory_count(user_id)
+        result['memories_used'] = new_count
+        result['memory_limit'] = MEMORY_FREE_LIMIT
+        result['is_premium'] = False
+
         return jsonify(result), 200
         
     except Exception as e:
@@ -473,8 +493,114 @@ def google_auth():
         print(f"Error in Google auth: {e}")
         return jsonify({'error': 'Internal server error'}), 500
 
+# ───────────────────────────────────────────────────────────
+#  User Usage API
+# ───────────────────────────────────────────────────────────
+
+@app.route('/api/user/usage', methods=['GET'])
+@login_required
+def get_user_usage(user_id):
+    """Return memory usage stats for the logged-in user."""
+    try:
+        count, is_premium = db_manager.get_memory_count(user_id)
+        remaining = None if is_premium else max(0, MEMORY_FREE_LIMIT - count)
+        return jsonify({
+            'memories_used': count,
+            'memory_limit': None if is_premium else MEMORY_FREE_LIMIT,
+            'remaining': remaining,
+            'is_premium': is_premium,
+            'limit_reached': (not is_premium and count >= MEMORY_FREE_LIMIT)
+        }), 200
+    except Exception as e:
+        print(f"Error fetching usage: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+# ───────────────────────────────────────────────────────────
+#  Payment Gateway API  (Razorpay / Stripe integration point)
+# ───────────────────────────────────────────────────────────
+
+PREMIUM_PRICE_INR = 299   # ₹299 / month (change as needed)
+PREMIUM_PRICE_USD = 4.99  # $4.99 / month
+
+@app.route('/api/payment/initiate', methods=['POST'])
+@login_required
+def initiate_payment(user_id):
+    """
+    Create a payment order.
+    In a real setup, call Razorpay / Stripe here to get an order_id.
+    For now we return a simulated order so the frontend modal can show it.
+    """
+    import uuid
+    try:
+        count, is_premium = db_manager.get_memory_count(user_id)
+        if is_premium:
+            return jsonify({'message': 'Already premium', 'is_premium': True}), 200
+
+        order_id = f"order_{uuid.uuid4().hex[:16].upper()}"
+
+        # ── Razorpay (uncomment when you have API keys) ──────────────────────
+        # import razorpay
+        # client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+        # order = client.order.create({
+        #     'amount': PREMIUM_PRICE_INR * 100,  # paise
+        #     'currency': 'INR',
+        #     'payment_capture': 1
+        # })
+        # order_id = order['id']
+        # ─────────────────────────────────────────────────────────────────────
+
+        return jsonify({
+            'order_id': order_id,
+            'amount': PREMIUM_PRICE_INR,
+            'currency': 'INR',
+            'price_display': f'₹{PREMIUM_PRICE_INR}/month',
+            'description': 'MemoAI Premium — Unlimited Memories'
+        }), 200
+
+    except Exception as e:
+        print(f"Error initiating payment: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+
+@app.route('/api/payment/verify', methods=['POST'])
+@login_required
+def verify_payment(user_id):
+    """
+    Verify payment and upgrade user to premium.
+    In a real setup, verify the signature from Razorpay / Stripe webhook here.
+    For now, we trust the payment_id from the frontend (demo mode).
+    """
+    try:
+        data = request.get_json() or {}
+        payment_id = data.get('payment_id', '')
+        order_id = data.get('order_id', '')
+
+        if not payment_id or not order_id:
+            return jsonify({'error': 'payment_id and order_id are required'}), 400
+
+        # ── Razorpay signature verification (uncomment when live) ───────────
+        # import razorpay, hashlib, hmac
+        # signature = data.get('signature', '')
+        # msg = f"{order_id}|{payment_id}"
+        # generated = hmac.new(RAZORPAY_KEY_SECRET.encode(), msg.encode(), hashlib.sha256).hexdigest()
+        # if generated != signature:
+        #     return jsonify({'error': 'Invalid payment signature'}), 400
+        # ─────────────────────────────────────────────────────────────────────
+
+        if db_manager.set_premium(user_id):
+            return jsonify({
+                'message': 'Payment verified! You are now a Premium member.',
+                'is_premium': True,
+                'payment_id': payment_id
+            }), 200
+        else:
+            return jsonify({'error': 'Failed to upgrade account'}), 500
+
+    except Exception as e:
+        print(f"Error verifying payment: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
 @app.route('/api/contact', methods=['POST'])
-@limiter.limit("10 per day")
 def contact():
     """Handle contact form submissions"""
     try:

@@ -46,7 +46,6 @@ document.addEventListener('DOMContentLoaded', function () {
     // State variables
     let isRecording = false;
     let recognition;
-    let heroInterval;
     let silenceTimeout;
     let currentSearchResults = [];
     let cameraStream = null;
@@ -140,6 +139,144 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Auto-load memories when on dashboard
     loadMemoriesFromBackend();
+
+    // Initial usage check
+    fetchUserUsage();
+
+    async function fetchUserUsage() {
+        const usageContainer = document.getElementById('usage-container');
+        if (!usageContainer) return;
+
+        try {
+            const response = await fetch('/api/user/usage', {
+                headers: getAuthHeaders()
+            });
+            if (response.ok) {
+                const data = await response.json();
+                updateUsageBar(data.memories_used, data.memory_limit, data.is_premium);
+                usageContainer.style.display = 'block';
+            }
+        } catch (e) {
+            console.error('Failed to fetch usage:', e);
+        }
+    }
+
+    function updateUsageBar(used, limit, isPremium) {
+        const text = document.getElementById('usage-text');
+        const fill = document.getElementById('usage-bar-fill');
+        const plan = document.getElementById('usage-plan');
+        const link = document.getElementById('upgrade-link');
+
+        if (isPremium) {
+            if (text) text.textContent = 'Unlimited Memories';
+            if (fill) fill.style.width = '100%';
+            if (plan) plan.textContent = 'Premium Plan';
+            if (link) link.style.display = 'none';
+            return;
+        }
+
+        if (text) text.textContent = `${used} / ${limit} memories`;
+        if (fill) {
+            const percent = Math.min(100, (used / limit) * 100);
+            fill.style.width = `${percent}%`;
+            if (percent > 80) fill.style.background = 'linear-gradient(90deg, #F72585, #EF233C)';
+        }
+        if (plan) plan.textContent = 'Free Tier';
+        if (link) link.style.display = 'inline-block';
+    }
+
+    function showPaymentModal(data) {
+        const modal = document.getElementById('payment-modal');
+        const amount = document.getElementById('premium-amount');
+        if (!modal) return;
+
+        if (data && data.amount) {
+            amount.textContent = data.amount;
+        }
+
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    // Modal listeners
+    const closePaymentBtn = document.getElementById('close-payment-modal');
+    if (closePaymentBtn) {
+        closePaymentBtn.addEventListener('click', () => {
+            document.getElementById('payment-modal').classList.remove('active');
+            document.body.style.overflow = '';
+        });
+    }
+
+    const payNowBtn = document.getElementById('pay-now-btn');
+    if (payNowBtn) {
+        payNowBtn.addEventListener('click', handlePayment);
+    }
+
+    async function handlePayment() {
+        payNowBtn.disabled = true;
+        payNowBtn.textContent = 'Initiating...';
+
+        try {
+            const response = await fetch('/api/payment/initiate', {
+                method: 'POST',
+                headers: getAuthHeaders()
+            });
+            const order = await response.json();
+
+            if (response.ok) {
+                // In a real Razorpay setup, you would use RZP checkout here.
+                // For this demo, we simulate a successful payment delay.
+                payNowBtn.textContent = 'Processing Payment...';
+
+                setTimeout(async () => {
+                    // Simulate verification
+                    await verifyPayment('pay_sim_' + Math.random().toString(36).substr(2, 9), order.order_id);
+                }, 2000);
+            } else {
+                throw new Error(order.error || 'Failed to initiate payment');
+            }
+        } catch (e) {
+            showError(`Payment failed: ${e.message}`);
+            payNowBtn.disabled = false;
+            payNowBtn.textContent = 'Pay Now with Razorpay';
+        }
+    }
+
+    async function verifyPayment(paymentId, orderId) {
+        try {
+            const response = await fetch('/api/payment/verify', {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ payment_id: paymentId, order_id: orderId })
+            });
+            const result = await response.json();
+
+            if (response.ok) {
+                alert('Upgrade Successful! You now have unlimited memories.');
+                document.getElementById('payment-modal').classList.remove('active');
+                document.body.style.overflow = '';
+
+                // Refresh usage bar
+                fetchUserUsage();
+            } else {
+                throw new Error(result.error || 'Verification failed');
+            }
+        } catch (e) {
+            showError(`Verification failed: ${e.message}`);
+        } finally {
+            payNowBtn.disabled = false;
+            payNowBtn.textContent = 'Pay Now with Razorpay';
+        }
+    }
+
+    const upgradeLink = document.getElementById('upgrade-link');
+    if (upgradeLink) {
+        upgradeLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            showPaymentModal();
+        });
+    }
+
 
     // Camera event listeners
     if (useCameraBtn) {
@@ -360,7 +497,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Submit voice memory
-    function submitVoiceMemory() {
+    async function submitVoiceMemory() {
         const voiceText = voiceOutput.value.trim();
 
         if (!voiceText) {
@@ -368,52 +505,56 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        // Show saving spinner and status
         savingSpinner.style.display = 'block';
         saveStatus.textContent = 'Processing...';
         submitVoiceBtn.disabled = true;
 
-        // Prepare data for backend
-        const requestData = {
-            voice_text: voiceText,
-            has_image: false
-        };
+        const requestData = { voice_text: voiceText, has_image: false };
 
-        // Call backend API to process and save
-        fetch('/api/process-memory', {
-            method: 'POST',
-            headers: getAuthHeaders(),
-            body: JSON.stringify(requestData)
-        })
-            .then(response => response.json())
-            .then(result => {
-                // Hide spinner and show success
-                savingSpinner.style.display = 'none';
-                saveStatus.textContent = 'Saved & Processed!';
-
-                // Update processing results section
-                categoryResult.textContent = result.category || 'Uncategorized';
-                contextResult.textContent = result.context || 'No context generated';
-                tagsResult.textContent = result.tags?.join(', ') || 'No tags generated';
-
-                // Store in local memory for search
-                addToLocalMemory(result);
-
-                // Reset status after a moment
-                setTimeout(() => {
-                    saveStatus.textContent = 'Saved to MemoAI';
-                }, 2000);
-
-                // Re-enable submit button
-                submitVoiceBtn.disabled = false;
-            })
-            .catch(error => {
-                console.error('Error processing memory:', error);
-                savingSpinner.style.display = 'none';
-                saveStatus.textContent = 'Error saving';
-                showError('Failed to save memory. Please try again.');
-                submitVoiceBtn.disabled = false;
+        try {
+            const response = await fetch('/api/process-memory', {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify(requestData)
             });
+
+            const result = await response.json();
+
+            if (response.status === 402 && result.payment_required) {
+                savingSpinner.style.display = 'none';
+                saveStatus.textContent = 'Limit reached';
+                submitVoiceBtn.disabled = false;
+                showPaymentModal(result);
+                return;
+            }
+
+            if (!response.ok) {
+                throw new Error(result.error || `Server error: ${response.status}`);
+            }
+
+            savingSpinner.style.display = 'none';
+            saveStatus.textContent = 'Saved & Processed!';
+
+            if (categoryResult) categoryResult.textContent = result.category || 'Uncategorized';
+            if (contextResult) contextResult.textContent = result.context || 'No context';
+            if (tagsResult) tagsResult.textContent = result.tags?.join(', ') || 'No tags';
+
+            if (result.memories_used !== undefined) {
+                updateUsageBar(result.memories_used, result.memory_limit);
+            }
+
+            addToLocalMemory(result);
+
+            setTimeout(() => { saveStatus.textContent = 'Saved to MemoAI'; }, 2000);
+            submitVoiceBtn.disabled = false;
+
+        } catch (error) {
+            console.error('Error processing memory:', error);
+            savingSpinner.style.display = 'none';
+            saveStatus.textContent = 'Error saving';
+            showError('Failed to save memory. Please try again.');
+            submitVoiceBtn.disabled = false;
+        }
     }
 
     // Handle image upload
@@ -578,6 +719,15 @@ document.addEventListener('DOMContentLoaded', function () {
             clearTimeout(timeoutId);
 
             if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                if (response.status === 402 && errData.payment_required) {
+                    showPaymentModal(errData);
+                    // Reset UI
+                    categoryResult.textContent = '-';
+                    contextResult.textContent = '-';
+                    tagsResult.textContent = '-';
+                    return;
+                }
                 throw new Error(`Server error: ${response.status}`);
             }
 
@@ -587,6 +737,11 @@ document.addEventListener('DOMContentLoaded', function () {
             categoryResult.textContent = result.category || 'Uncategorized';
             contextResult.textContent = result.context || 'No context generated';
             tagsResult.textContent = result.tags?.join(', ') || 'No tags generated';
+
+            // Update usage bar
+            if (result.memories_used !== undefined) {
+                updateUsageBar(result.memories_used, result.memory_limit);
+            }
 
             // Store in local memory for search
             addToLocalMemory(result);
@@ -1091,37 +1246,12 @@ document.addEventListener('DOMContentLoaded', function () {
         observer.observe(el);
     });
 
-    // Add wave effect to hero section
-    const hero = document.querySelector('.hero');
-
-    if (hero) {
-        heroInterval = setInterval(() => {
-            hero.style.background = 'linear-gradient(135deg, ' +
-                `${getRandomColor()} 0%, ${getRandomColor()} 100%)`;
-        }, 5000);
-    }
-
     // Cleanup interval on page unload
     window.addEventListener('beforeunload', () => {
-        if (heroInterval) {
-            clearInterval(heroInterval);
-        }
         if (silenceTimeout) {
             clearTimeout(silenceTimeout);
         }
     });
-
-    // Helper function for random colors
-    function getRandomColor() {
-        const colors = [
-            '#667eea', '#764ba2',
-            '#f093fb', '#f5576c',
-            '#4facfe', '#00f2fe',
-            '#43e97b', '#38f9d7',
-            '#fa709a', '#fee140'
-        ];
-        return colors[Math.floor(Math.random() * colors.length)];
-    }
 
     // Submit image memory
     function submitImageMemory() {

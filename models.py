@@ -27,7 +27,7 @@ def _get_sqlite_conn():
 
 
 def _ensure_users_table():
-    """Create users table in SQLite if it doesn't exist."""
+    """Create users table in SQLite if it doesn't exist, and migrate if needed."""
     try:
         conn = _get_sqlite_conn()
         conn.execute("""
@@ -36,9 +36,20 @@ def _ensure_users_table():
                 name TEXT NOT NULL,
                 email TEXT UNIQUE NOT NULL,
                 password_hash TEXT NOT NULL,
+                memory_count INTEGER DEFAULT 0,
+                is_premium INTEGER DEFAULT 0,
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP
             )
         """)
+        # Migrate: add columns if they don't exist (for existing DBs)
+        try:
+            conn.execute("ALTER TABLE users ADD COLUMN memory_count INTEGER DEFAULT 0")
+        except Exception:
+            pass  # Column already exists
+        try:
+            conn.execute("ALTER TABLE users ADD COLUMN is_premium INTEGER DEFAULT 0")
+        except Exception:
+            pass  # Column already exists
         conn.commit()
         conn.close()
         print("SQLite users table ready.")
@@ -141,7 +152,7 @@ class DatabaseManager:
         try:
             conn = _get_sqlite_conn()
             row = conn.execute(
-                "SELECT id, name, email, password_hash FROM users WHERE id = ?",
+                "SELECT id, name, email, password_hash, memory_count, is_premium FROM users WHERE id = ?",
                 (user_id,)
             ).fetchone()
             conn.close()
@@ -150,12 +161,62 @@ class DatabaseManager:
                     'id': row['id'],
                     'name': row['name'],
                     'email': row['email'],
-                    'password_hash': row['password_hash']
+                    'password_hash': row['password_hash'],
+                    'memory_count': row['memory_count'] or 0,
+                    'is_premium': bool(row['is_premium'])
                 }
             return None
         except Exception as e:
             print(f"[Auth] Error fetching user by ID: {e}")
             return None
+
+    def get_memory_count(self, user_id: int) -> int:
+        """Return how many memories this user has saved."""
+        try:
+            conn = _get_sqlite_conn()
+            row = conn.execute(
+                "SELECT memory_count, is_premium FROM users WHERE id = ?", (user_id,)
+            ).fetchone()
+            conn.close()
+            if row:
+                return (row['memory_count'] or 0, bool(row['is_premium']))
+            return (0, False)
+        except Exception as e:
+            print(f"[Auth] Error fetching memory count: {e}")
+            return (0, False)
+
+    def increment_memory_count(self, user_id: int) -> int:
+        """Increment memory_count by 1 and return the new value."""
+        try:
+            conn = _get_sqlite_conn()
+            conn.execute(
+                "UPDATE users SET memory_count = memory_count + 1 WHERE id = ?",
+                (user_id,)
+            )
+            conn.commit()
+            row = conn.execute(
+                "SELECT memory_count FROM users WHERE id = ?", (user_id,)
+            ).fetchone()
+            conn.close()
+            return row['memory_count'] if row else 0
+        except Exception as e:
+            print(f"[Auth] Error incrementing memory count: {e}")
+            return 0
+
+    def set_premium(self, user_id: int) -> bool:
+        """Mark a user as premium (unlimited memories)."""
+        try:
+            conn = _get_sqlite_conn()
+            conn.execute(
+                "UPDATE users SET is_premium = 1 WHERE id = ?", (user_id,)
+            )
+            conn.commit()
+            conn.close()
+            print(f"[Auth] User {user_id} upgraded to premium")
+            return True
+        except Exception as e:
+            print(f"[Auth] Error setting premium: {e}")
+            return False
 
     def _resolve_user_ids(self, user_id: int) -> List[int]:
         """
