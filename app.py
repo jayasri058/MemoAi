@@ -9,7 +9,7 @@ import json
 import base64
 import numpy as np
 from datetime import datetime
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, render_template
 from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -35,7 +35,7 @@ except ImportError:
         print("PDF support disabled. Install with: pip install PyPDF2")
 
 # Initialize Flask app
-app = Flask(__name__, static_folder='.')
+app = Flask(__name__, static_folder='static', template_folder='templates')
 CORS(app)  # Enable CORS for all routes
 
 # Rate limiting setup
@@ -251,15 +251,27 @@ def search_similar_vectors(query_text, user_id, top_k=5, threshold=0.3):
 @app.route('/')
 def serve_index():
     """Serve the main HTML file"""
-    return send_from_directory('.', 'index.html')
+    return render_template('index.html')
 
-@app.route('/<path:path>')
-def serve_static(path):
-    """Serve static files"""
-    try:
-        return send_from_directory('.', path)
-    except FileNotFoundError:
-        return jsonify({'error': 'File not found'}), 404
+@app.route('/login')
+def serve_login():
+    """Serve the login page"""
+    return render_template('login.html')
+
+@app.route('/register')
+def serve_register():
+    """Serve the register page"""
+    return render_template('register.html')
+
+@app.route('/contact')
+def serve_contact():
+    """Serve the contact page"""
+    return render_template('contact.html')
+
+@app.route('/uploads/<path:filename>')
+def serve_upload(filename):
+    """Serve uploaded files"""
+    return send_from_directory('uploads', filename)
 
 @app.route('/api/process-memory', methods=['POST'])
 @login_required

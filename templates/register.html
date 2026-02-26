@@ -7,15 +7,15 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#2563eb">
-    <title>Login - MemoAI</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Register - MemoAI</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script>
         // If already logged in, redirect to dashboard
         if (sessionStorage.getItem('user')) {
-            window.location.href = 'index.html';
+            window.location.href = '/';
         }
     </script>
 </head>
@@ -33,12 +33,12 @@
                 <h2>MemoAI</h2>
             </div>
             <ul class="nav-menu" id="nav-menu">
-                <li><a href="index.html">Home</a></li>
-                <li><a href="index.html#features">Features</a></li>
-                <li><a href="index.html#demo">Demo</a></li>
-                <li><a href="index.html#about">About</a></li>
-                <li><a href="login.html" id="nav-login" class="active">Login</a></li>
-                <li><a href="register.html" id="nav-register">Register</a></li>
+                <li><a href="/">Home</a></li>
+                <li><a href="/#features">Features</a></li>
+                <li><a href="/#demo">Demo</a></li>
+                <li><a href="/#about">About</a></li>
+                <li><a href="/login" id="nav-login">Login</a></li>
+                <li><a href="/register" id="nav-register" class="active">Register</a></li>
                 <li><a href="#" id="nav-logout" style="display: none;">Logout</a></li>
             </ul>
         </div>
@@ -49,11 +49,18 @@
     <div class="container auth-container">
         <div class="auth-card">
             <div class="auth-header">
-                <i class="fas fa-sign-in-alt icon"></i>
-                <h2>Welcome Back</h2>
-                <p>Login to access your memories</p>
+                <i class="fas fa-user-plus icon"></i>
+                <h2>Create Account</h2>
+                <p>Join MemoAI to start capturing your memories</p>
             </div>
             <form class="auth-form" onsubmit="event.preventDefault();">
+                <div class="form-group">
+                    <label for="fullname">Full Name</label>
+                    <div class="input-icon">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="fullname" placeholder="John Doe" required>
+                    </div>
+                </div>
                 <div class="form-group">
                     <label for="email">Email Address</label>
                     <div class="input-icon">
@@ -68,11 +75,14 @@
                         <input type="password" id="password" placeholder="••••••••" required>
                     </div>
                 </div>
-                <div class="form-group" style="text-align: right; margin-bottom: 1rem;">
-                    <a href="#" style="color: var(--primary-color); text-decoration: none; font-size: 0.9rem;">Forgot
-                        Password?</a>
+                <div class="form-group">
+                    <label for="confirm-password">Confirm Password</label>
+                    <div class="input-icon">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="confirm-password" placeholder="••••••••" required>
+                    </div>
                 </div>
-                <button type="submit" class="cta-btn full-width">Login</button>
+                <button type="submit" class="cta-btn full-width">Register</button>
             </form>
 
             <div class="auth-divider">
@@ -80,13 +90,13 @@
             </div>
 
             <div class="social-login-container">
-                <button type="button" class="social-btn" onclick="handleGoogleLogin()" title="Login with Google">
+                <button type="button" class="social-btn" onclick="handleGoogleSignup()" title="Signup with Google">
                     <i class="fab fa-google google-icon"></i>
                 </button>
             </div>
 
             <div class="auth-footer">
-                <p>Don't have an account? <a href="register.html">Register</a></p>
+                <p>Already have an account? <a href="/login">Login</a></p>
             </div>
         </div>
     </div>
@@ -104,77 +114,74 @@
     </div>
 
     <!-- Scripts -->
-    <script src="script.js"></script>
+    <script src="/static/js/script.js"></script>
     <script>
         document.querySelector('.auth-form').addEventListener('submit', async function (e) {
             e.preventDefault();
 
+            const name = document.getElementById('fullname').value;
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
             const btn = this.querySelector('button[type="submit"]');
+
+            if (password !== confirmPassword) {
+                alert("Passwords do not match!");
+                return;
+            }
 
             try {
                 btn.disabled = true;
-                btn.innerText = 'Logging in...';
+                btn.innerText = 'Registering...';
 
-                const response = await fetch('/api/login', {
+                const response = await fetch('/api/register', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ email, password })
+                    body: JSON.stringify({ name, email, password })
                 });
 
                 const data = await response.json();
 
                 if (response.ok) {
-                    // Save user info to sessionStorage
-                    sessionStorage.setItem('user', JSON.stringify(data.user));
-                    alert('Login successful!');
-                    window.location.href = 'index.html';
+                    // Mark that user has visited/registered
+                    localStorage.setItem('hasVisited', 'true');
+                    alert('Registration successful! Please login.');
+                    window.location.href = '/login';
                 } else {
-                    alert('Login failed: ' + (data.error || 'Unknown error'));
+                    alert('Registration failed: ' + (data.error || 'Unknown error'));
                 }
             } catch (error) {
                 console.error('Error:', error);
                 alert('An error occurred. Please try again.');
             } finally {
                 btn.disabled = false;
-                btn.innerText = 'Login';
+                btn.innerText = 'Register';
             }
         });
-
+    </script>
+    <script>
         let googleAccounts = [];
 
-        async function handleGoogleLogin() {
+        async function handleGoogleSignup() {
             const btn = document.querySelector('.social-btn');
             const originalContent = btn.innerHTML;
 
             try {
-                // Show loading spinner
                 btn.disabled = true;
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin google-icon"></i>';
 
-                // Fetch all registered Google accounts
-                const response = await fetch('/api/auth/google/accounts', {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-
+                const response = await fetch('/api/auth/google/accounts');
                 const data = await response.json();
 
-                if (response.ok && data.accounts && data.accounts.length > 0) {
-                    // Store accounts and show modal
+                if (response.ok && data.accounts) {
                     googleAccounts = data.accounts;
                     showAccountModal(googleAccounts);
-                } else {
-                    alert('No Google accounts found. Please register first.');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('An error occurred during Google login.');
+                alert('An error occurred during Google signup.');
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = originalContent;
@@ -182,87 +189,63 @@
         }
 
         function showAccountModal(accounts) {
-            console.log("Showing account modal with", accounts.length, "accounts");
             const modal = document.getElementById('accountModal');
             const list = document.getElementById('accountList');
 
-            if (!modal) {
-                console.error("Modal element not found!");
-                return;
-            }
-
-            // Create account items HTML
             let accountsHTML = '';
-
             accounts.forEach(account => {
                 const initial = account.name ? account.name.charAt(0).toUpperCase() : 'U';
                 accountsHTML += `
-        <div class="account-item" onclick="proceedWithGoogleLogin('${account.email}')">
-            <div class="account-avatar">${initial}</div>
-            <div class="account-info">
-                <span class="account-name">${account.name}</span>
-                <span class="account-email">${account.email}</span>
-            </div>
-        </div>
-        `;
+                    <div class="account-item" onclick="proceedWithGoogleSignup('${account.email}')">
+                        <div class="account-avatar">${initial}</div>
+                        <div class="account-info">
+                            <span class="account-name">${account.name}</span>
+                            <span class="account-email">${account.email}</span>
+                        </div>
+                    </div>
+                `;
             });
 
-            // Add "Use another account" option
             accountsHTML += `
-        <div class="account-item use-another-account" style="justify-content: center; border: none; padding: 0.75rem; margin-top: 0.5rem;" onclick="closeModal()">
-            <i class="fas fa-user-plus" style="margin-right: 0.5rem; color: var(--primary-color);"></i>
-            <span style="color: var(--text-secondary); font-size: 0.9rem;">Use another account</span>
-        </div>
+                <div class="account-item use-another-account" style="justify-content: center; border: none; padding: 0.75rem; margin-top: 0.5rem;" onclick="closeModal()">
+                    <i class="fas fa-user-plus" style="margin-right: 0.5rem; color: var(--primary-color);"></i>
+                    <span style="color: var(--text-secondary); font-size: 0.9rem;">Use another account</span>
+                </div>
             `;
 
             list.innerHTML = accountsHTML;
             modal.style.display = 'flex';
-            console.log("Modal display set to flex");
         }
 
         function closeModal() {
             document.getElementById('accountModal').style.display = 'none';
         }
 
-        async function proceedWithGoogleLogin(email) {
-            if (!email) {
-                alert('No email selected');
-                return;
-            }
-
+        async function proceedWithGoogleSignup(email) {
             try {
-                // Close modal first
                 closeModal();
-
-                // Authenticate with selected account
                 const response = await fetch('/api/auth/google', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ email: email })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
                 });
 
                 const data = await response.json();
-
                 if (response.ok) {
-                    // Save user info to sessionStorage and redirect
                     sessionStorage.setItem('user', JSON.stringify(data.user));
-                    window.location.href = 'index.html';
+                    localStorage.setItem('hasVisited', 'true');
+                    window.location.href = '/';
                 } else {
-                    alert('Login failed: ' + (data.error || 'Unknown error'));
+                    alert('Signup failed: ' + (data.error || 'Unknown error'));
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('An error occurred during login.');
+                alert('An error occurred during Google signup.');
             }
         }
 
-        // Close modal when clicking outside
         document.getElementById('accountModal').addEventListener('click', function (e) {
-            if (e.target === this) {
-                closeModal();
-            }
+            if (e.target === this) closeModal();
         });
     </script>
 </body>
