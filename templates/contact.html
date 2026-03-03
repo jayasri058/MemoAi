@@ -3,621 +3,162 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#6C63FF">
-    <title>Contact Us - MemoAI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Contact MemoAI - Get in touch with our team">
+    <title>Contact - MemoAI</title>
     <link rel="stylesheet" href="/static/css/styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <style>
-        /* ---- Contact Page Specific ---- */
-        .contact-section {
-            min-height: 100vh;
-            padding: 120px 24px 80px;
-            background:
-                radial-gradient(ellipse 80% 50% at 50% -10%, rgba(108, 99, 255, 0.28) 0%, transparent 65%),
-                radial-gradient(ellipse 60% 40% at 90% 90%, rgba(247, 37, 133, 0.12) 0%, transparent 55%),
-                var(--bg);
-        }
-
-        .contact-wrapper {
-            max-width: 960px;
-            margin: 0 auto;
-        }
-
-        /* Page Header */
-        .contact-header {
-            text-align: center;
-            margin-bottom: 3.5rem;
-        }
-
-        .contact-header .badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            background: rgba(108, 99, 255, 0.15);
-            border: 1px solid rgba(108, 99, 255, 0.35);
-            color: var(--primary-light);
-            padding: 0.4rem 1.1rem;
-            border-radius: 50px;
-            font-size: 0.82rem;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-            margin-bottom: 1.25rem;
-        }
-
-        .contact-header h1 {
-            font-size: clamp(2rem, 5vw, 3rem);
-            font-weight: 800;
-            letter-spacing: -1px;
-            line-height: 1.15;
-            margin-bottom: 1rem;
-            background: linear-gradient(135deg, #fff 0%, var(--primary-light) 50%, var(--accent) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .contact-header p {
-            font-size: 1.05rem;
-            color: var(--text-secondary);
-            max-width: 520px;
-            margin: 0 auto;
-            line-height: 1.7;
-        }
-
-        /* Main Grid */
-        .contact-grid {
-            display: grid;
-            grid-template-columns: 1fr 380px;
-            gap: 2rem;
-            align-items: start;
-        }
-
-        /* Form Card */
-        .contact-form-card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 24px;
-            padding: 2.5rem;
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-        }
-
-        .contact-form-card h2 {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin-bottom: 2rem;
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-        }
-
-        .contact-form-card h2 i {
-            color: var(--primary-light);
-            font-size: 1.1rem;
-        }
-
-        /* Form Fields */
-        .contact-form {
-            display: flex;
-            flex-direction: column;
-            gap: 1.25rem;
-        }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.45rem;
-        }
-
-        .form-group label {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--text-secondary);
-            letter-spacing: 0.3px;
-        }
-
-        .form-group .field-icon {
-            position: relative;
-        }
-
-        .form-group .field-icon i {
-            position: absolute;
-            left: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            pointer-events: none;
-        }
-
-        .form-group .field-icon textarea+i,
-        .form-group.area-group .field-icon i {
-            top: 1.1rem;
-            transform: none;
-        }
-
-        .form-group input,
-        .form-group textarea {
-            width: 100%;
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            padding: 0.85rem 1rem 0.85rem 2.8rem;
-            font-size: 0.95rem;
-            font-family: inherit;
-            color: var(--text-primary);
-            transition: all 0.3s ease;
-        }
-
-        .form-group textarea {
-            min-height: 140px;
-            resize: vertical;
-            padding-top: 0.85rem;
-        }
-
-        .form-group input::placeholder,
-        .form-group textarea::placeholder {
-            color: rgba(177, 174, 200, 0.4);
-        }
-
-        .form-group input:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-            background: rgba(255, 255, 255, 0.09);
-            box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.18);
-        }
-
-        /* Alert messages */
-        .alert {
-            padding: 1rem 1.25rem;
-            border-radius: 10px;
-            font-size: 0.92rem;
-            font-weight: 500;
-            display: none;
-            align-items: center;
-            gap: 0.6rem;
-        }
-
-        .alert-success {
-            background: rgba(6, 214, 160, 0.12);
-            border: 1px solid rgba(6, 214, 160, 0.35);
-            color: var(--accent-green);
-        }
-
-        .alert-error {
-            background: rgba(239, 35, 60, 0.1);
-            border: 1px solid rgba(239, 35, 60, 0.3);
-            color: #ff6b81;
-        }
-
-        /* Submit Button */
-        .contact-submit-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.6rem;
-            width: 100%;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
-            color: white;
-            border: none;
-            padding: 1rem 2rem;
-            font-size: 1rem;
-            font-weight: 700;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 0.5rem;
-            box-shadow: 0 6px 25px rgba(108, 99, 255, 0.4);
-            letter-spacing: 0.3px;
-            font-family: inherit;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .contact-submit-btn::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, var(--accent) 0%, var(--primary) 100%);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .contact-submit-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 35px rgba(108, 99, 255, 0.55);
-        }
-
-        .contact-submit-btn:hover::before {
-            opacity: 1;
-        }
-
-        .contact-submit-btn>* {
-            position: relative;
-            z-index: 1;
-        }
-
-        .contact-submit-btn:active {
-            transform: translateY(0);
-        }
-
-        .contact-submit-btn:disabled {
-            opacity: 0.55;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        /* Sidebar */
-        .contact-sidebar {
-            display: flex;
-            flex-direction: column;
-            gap: 1.25rem;
-        }
-
-        /* Info Cards */
-        .info-card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            padding: 1.75rem;
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            transition: all 0.35s cubic-bezier(0.23, 1, 0.32, 1);
-        }
-
-        .info-card:hover {
-            border-color: rgba(108, 99, 255, 0.4);
-            background: rgba(255, 255, 255, 0.08);
-            transform: translateY(-4px);
-            box-shadow: 0 8px 30px rgba(108, 99, 255, 0.18);
-        }
-
-        .info-card-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.35rem;
-            margin-bottom: 1rem;
-            flex-shrink: 0;
-        }
-
-        .icon-purple {
-            background: rgba(108, 99, 255, 0.2);
-        }
-
-        .icon-pink {
-            background: rgba(247, 37, 133, 0.2);
-        }
-
-        .icon-teal {
-            background: rgba(76, 201, 240, 0.2);
-        }
-
-        .icon-green {
-            background: rgba(6, 214, 160, 0.2);
-        }
-
-        .info-card h3 {
-            font-size: 1rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin-bottom: 0.3rem;
-        }
-
-        .info-card p {
-            font-size: 0.88rem;
-            color: var(--text-secondary);
-            line-height: 1.55;
-            margin: 0;
-        }
-
-        .info-card a {
-            color: var(--primary-light);
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.3s ease;
-        }
-
-        .info-card a:hover {
-            color: var(--accent);
-        }
-
-        /* Social row */
-        .social-row {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            padding: 1.5rem;
-            backdrop-filter: blur(16px);
-        }
-
-        .social-row h3 {
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 1rem;
-        }
-
-        .social-links {
-            display: flex;
-            gap: 0.75rem;
-        }
-
-        .social-link {
-            width: 42px;
-            height: 42px;
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-secondary);
-            font-size: 1.1rem;
-            text-decoration: none;
-            transition: all 0.3s ease;
-        }
-
-        .social-link:hover {
-            background: rgba(108, 99, 255, 0.2);
-            border-color: var(--primary);
-            color: var(--primary-light);
-            transform: translateY(-3px);
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .contact-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .contact-sidebar {
-                order: -1;
-                flex-direction: row;
-                flex-wrap: wrap;
-            }
-
-            .info-card {
-                flex: 1 1 180px;
-            }
-
-            .social-row {
-                flex: 100%;
-            }
-        }
-
-        @media (max-width: 560px) {
-            .form-row {
-                grid-template-columns: 1fr;
-            }
-
-            .contact-form-card {
-                padding: 1.75rem 1.25rem;
-            }
-
-            .contact-section {
-                padding: 100px 16px 60px;
-            }
-
-            .contact-sidebar {
-                flex-direction: column;
-            }
-        }
-    </style>
 </head>
 
 <body>
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="logo">
-                <h2>MemoAI</h2>
+    <div id="toast-container" class="toast-container"></div>
+    <div class="dashboard-page">
+        <header class="contact-header">
+            <div class="contact-header-inner">
+                <a href="/" class="nav-logo">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2a9 9 0 0 1 9 9c0 3.1-1.6 5.8-4 7.4V21H7v-2.6A9 9 0 0 1 12 2z" />
+                        <path d="M9 21v1a3 3 0 0 0 6 0v-1" />
+                        <path d="M10 8h4" />
+                        <path d="M10 12h4" />
+                    </svg>
+                    <span class="gradient-text">MemoAI</span>
+                </a>
+                <a href="/" class="auth-back" style="margin-bottom:0">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="19" y1="12" x2="5" y2="12" />
+                        <polyline points="12 19 5 12 12 5" />
+                    </svg>
+                    Back to Home
+                </a>
             </div>
-            <div class="hamburger-menu" id="hamburger-menu">
-                <span class="bar"></span>
-                <span class="bar"></span>
-                <span class="bar"></span>
+        </header>
+        <main class="contact-main">
+            <div class="text-center" style="margin-bottom:3rem">
+                <h1 style="font-size:2rem;font-weight:700;margin-bottom:1rem">Get in Touch</h1>
+                <p style="font-size:1.125rem;color:var(--gray-600)">Have questions? We'd love to hear from you.</p>
             </div>
-            <ul class="nav-menu" id="nav-menu">
-                <li><a href="/">Home</a></li>
-                <li><a href="/#features">Features</a></li>
-                <li><a href="/#demo">Demo</a></li>
-                <li><a href="/#about">About</a></li>
-                <li><a href="/contact" class="active">Contact</a></li>
-                <li><a href="/login" id="nav-login">Login</a></li>
-                <li><a href="/register" id="nav-register">Register</a></li>
-                <li><a href="#" id="nav-logout" style="display: none;">Logout</a></li>
-            </ul>
-        </div>
-    </nav>
-
-    <!-- Contact Section -->
-    <section class="contact-section">
-        <div class="contact-wrapper">
-
-            <!-- Header -->
-            <div class="contact-header">
-                <div class="badge">
-                    <i class="fas fa-envelope"></i> Contact Us
-                </div>
-                <h1>Get in Touch</h1>
-                <p>Have questions or feedback? We'd love to hear from you. Send us a message and we'll get back to you
-                    as soon as possible.</p>
-            </div>
-
-            <!-- Grid -->
             <div class="contact-grid">
-
-                <!-- Form -->
                 <div class="contact-form-card">
-                    <h2><i class="fas fa-paper-plane"></i> Send a Message</h2>
-
-                    <div id="success-message" class="alert alert-success">
-                        <i class="fas fa-check-circle"></i>
-                        <span>Thank you! Your message has been sent. We'll get back to you soon.</span>
-                    </div>
-                    <div id="error-message" class="alert alert-error">
-                        <i class="fas fa-exclamation-circle"></i>
-                        <span>Sorry, something went wrong. Please try again later.</span>
-                    </div>
-
-                    <form class="contact-form" id="contact-form">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="name">Full Name *</label>
-                                <div class="field-icon">
-                                    <i class="fas fa-user"></i>
-                                    <input type="text" id="name" name="name" required placeholder="John Doe">
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label for="email">Email Address *</label>
-                                <div class="field-icon">
-                                    <i class="fas fa-envelope"></i>
-                                    <input type="email" id="email" name="email" required placeholder="john@example.com">
-                                </div>
-                            </div>
-                        </div>
-
+                    <h2>Send us a Message</h2>
+                    <form id="contact-form" class="contact-form">
                         <div class="form-group">
-                            <label for="subject">Subject *</label>
-                            <div class="field-icon">
-                                <i class="fas fa-tag"></i>
-                                <input type="text" id="subject" name="subject" required
-                                    placeholder="What is this regarding?">
+                            <label>Name</label>
+                            <div class="input-wrapper">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                    <circle cx="12" cy="7" r="4" />
+                                </svg>
+                                <input type="text" id="contact-name" placeholder="Your name" required>
                             </div>
                         </div>
-
-                        <div class="form-group area-group">
-                            <label for="message">Message *</label>
-                            <div class="field-icon">
-                                <i class="fas fa-comment-alt"></i>
-                                <textarea id="message" name="message" required
-                                    placeholder="Tell us more about your inquiry..."></textarea>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <div class="input-wrapper">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2">
+                                    <path
+                                        d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                                    <polyline points="22,6 12,13 2,6" />
+                                </svg>
+                                <input type="email" id="contact-email" placeholder="you@example.com" required>
                             </div>
                         </div>
-
-                        <button type="submit" class="contact-submit-btn" id="submit-btn">
-                            <i class="fas fa-paper-plane"></i>
-                            <span>Send Message</span>
+                        <div class="form-group">
+                            <label>Subject</label>
+                            <div class="input-wrapper">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                                </svg>
+                                <input type="text" id="contact-subject" placeholder="How can we help?" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Message</label>
+                            <textarea id="contact-message" class="input-no-icon" rows="5"
+                                placeholder="Tell us more about your question or feedback..." required
+                                style="width:100%;padding:.75rem 1rem;border:1px solid var(--gray-300);border-radius:.5rem;font-size:.95rem;resize:none;transition:all .2s"></textarea>
+                        </div>
+                        <button type="submit" class="btn-primary auth-submit" id="contact-submit-btn"
+                            style="display:flex;align-items:center;gap:.5rem">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="22" y1="2" x2="11" y2="13" />
+                                <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                            </svg>
+                            Send Message
                         </button>
                     </form>
                 </div>
-
-                <!-- Sidebar -->
-                <div class="contact-sidebar">
-                    <div class="info-card">
-                        <div class="info-card-icon icon-purple">📧</div>
-                        <h3>Email Us</h3>
-                        <p><a href="mailto:support@memoai.com">support@memoai.com</a></p>
+                <div>
+                    <div class="contact-info-card">
+                        <h3>Contact Information</h3>
+                        <div class="contact-info-item">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                                <polyline points="22,6 12,13 2,6" />
+                            </svg>
+                            <div>
+                                <p class="label">Email</p>
+                                <a href="mailto:support@memoai.com">support@memoai.com</a>
+                            </div>
+                        </div>
                     </div>
-
-                    <div class="info-card">
-                        <div class="info-card-icon icon-teal">💬</div>
-                        <h3>Live Support</h3>
-                        <p>Available 24/7 for urgent queries and technical help.</p>
+                    <div class="faq-card">
+                        <h3>Frequently Asked Questions</h3>
+                        <div class="faq-item">
+                            <h4>How does the free trial work?</h4>
+                            <p>You get 10 free memories to start. No credit card required.</p>
+                        </div>
+                        <div class="faq-item">
+                            <h4>Can I export my memories?</h4>
+                            <p>Yes! Premium users can export their memories in multiple formats.</p>
+                        </div>
+                        <div class="faq-item">
+                            <h4>Is my data secure?</h4>
+                            <p>Absolutely. We use industry-standard encryption to protect your data.</p>
+                        </div>
                     </div>
-
-                    <div class="info-card">
-                        <div class="info-card-icon icon-green">⚡</div>
-                        <h3>Response Time</h3>
-                        <p>We typically respond within <strong style="color:var(--accent-green);">2 hours</strong>
-                            during business hours.</p>
-                    </div>
-
-                    <div class="info-card">
-                        <div class="info-card-icon icon-pink">🌍</div>
-                        <h3>Global Service</h3>
-                        <p>Serving users worldwide across all time zones.</p>
-                    </div>
-
-                    <div class="social-row">
-                        <h3>Follow Us</h3>
-                        <div class="social-links">
-                            <a href="#" class="social-link" title="Twitter/X"><i class="fab fa-x-twitter"></i></a>
-                            <a href="#" class="social-link" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
-                            <a href="#" class="social-link" title="GitHub"><i class="fab fa-github"></i></a>
-                            <a href="#" class="social-link" title="Discord"><i class="fab fa-discord"></i></a>
+                    <div class="connect-card">
+                        <h3>Other Ways to Connect</h3>
+                        <p>Join our community and stay updated with the latest features.</p>
+                        <div class="connect-links">
+                            <a href="#" class="connect-link">Twitter</a>
+                            <a href="#" class="connect-link">LinkedIn</a>
+                            <a href="#" class="connect-link">GitHub</a>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <p>&copy; 2024 MemoAI - Intelligent Personal Memory Assistant</p>
-        </div>
-    </footer>
-
+        </main>
+    </div>
     <script src="/static/js/script.js"></script>
     <script>
         document.getElementById('contact-form').addEventListener('submit', async function (e) {
             e.preventDefault();
-
-            const submitBtn = document.getElementById('submit-btn');
-            const successMsg = document.getElementById('success-message');
-            const errorMsg = document.getElementById('error-message');
-            const btnText = submitBtn.querySelector('span');
-
-            const formData = {
-                name: document.getElementById('name').value,
-                email: document.getElementById('email').value,
-                subject: document.getElementById('subject').value,
-                message: document.getElementById('message').value
-            };
-
-            submitBtn.disabled = true;
-            btnText.textContent = 'Sending...';
-            successMsg.style.display = 'none';
-            errorMsg.style.display = 'none';
-
+            const btn = document.getElementById('contact-submit-btn');
+            btn.disabled = true; btn.innerHTML = '<span class="spinner-white"></span> Sending...';
             try {
-                const response = await fetch('/api/contact', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formData)
+                const res = await fetch('/api/contact', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: document.getElementById('contact-name').value,
+                        email: document.getElementById('contact-email').value,
+                        subject: document.getElementById('contact-subject').value,
+                        message: document.getElementById('contact-message').value
+                    })
                 });
-
-                const result = await response.json();
-
-                if (response.ok) {
-                    successMsg.style.display = 'flex';
+                const data = await res.json();
+                if (res.ok) {
+                    showToast("Message sent successfully! We'll get back to you soon.", 'success');
                     document.getElementById('contact-form').reset();
-                    successMsg.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                } else {
-                    throw new Error(result.error || 'Failed to send message');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                errorMsg.style.display = 'flex';
-            } finally {
-                submitBtn.disabled = false;
-                btnText.textContent = 'Send Message';
-            }
+                } else { showToast(data.error || 'Failed to send', 'error'); }
+            } catch (err) { showToast('Connection error', 'error'); }
+            finally { btn.disabled = false; btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Send Message'; }
         });
     </script>
 </body>

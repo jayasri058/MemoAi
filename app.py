@@ -268,6 +268,16 @@ def serve_contact():
     """Serve the contact page"""
     return render_template('contact.html')
 
+@app.route('/dashboard')
+def serve_dashboard():
+    """Serve the dashboard page"""
+    return render_template('dashboard.html')
+
+@app.route('/memories')
+def serve_memories():
+    """Serve the memories page"""
+    return render_template('memories.html')
+
 @app.route('/uploads/<path:filename>')
 def serve_upload(filename):
     """Serve uploaded files"""

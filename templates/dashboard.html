@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="description" content="MemoAI Dashboard - Capture and manage your memories">
+    <title>Dashboard - MemoAI</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <script>
+        const user = JSON.parse(sessionStorage.getItem('user') || 'null');
+        if (!user) { window.location.href = '/login'; }
+    </script>
+</head>
+
+<body>
+    <div id="toast-container" class="toast-container"></div>
+    <div class="dashboard-page">
+        <!-- Header -->
+        <header class="dash-header">
+            <div class="dash-header-inner">
+                <a href="/" class="nav-logo">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2a9 9 0 0 1 9 9c0 3.1-1.6 5.8-4 7.4V21H7v-2.6A9 9 0 0 1 12 2z" />
+                        <path d="M9 21v1a3 3 0 0 0 6 0v-1" />
+                        <path d="M10 8h4" />
+                        <path d="M10 12h4" />
+                    </svg>
+                    <span class="gradient-text">MemoAI</span>
+                </a>
+                <nav class="dash-nav">
+                    <a href="/" class="active">Dashboard</a>
+                    <a href="/memories">All Memories</a>
+                    <a href="/contact">Contact</a>
+                </nav>
+                <div class="dash-user">
+                    <button id="upgrade-btn" class="btn-primary" style="font-size:.85rem;padding:.4rem 1rem">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z" />
+                        </svg>
+                        Upgrade
+                    </button>
+                    <div class="dash-avatar" id="user-avatar"></div>
+                    <div class="dash-user-info">
+                        <span class="dash-user-name" id="user-name-display"></span>
+                        <span class="dash-user-email" id="user-email-display"></span>
+                    </div>
+                    <button class="btn-ghost" id="logout-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                            <polyline points="16 17 21 12 16 7" />
+                            <line x1="21" y1="12" x2="9" y2="12" />
+                        </svg>
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main class="dash-main">
+            <!-- Welcome -->
+            <div class="dash-welcome">
+                <h1 id="welcome-text">Welcome back! 👋</h1>
+                <p>Capture your thoughts, ideas, and moments.</p>
+            </div>
+
+            <!-- Usage Indicator -->
+            <div class="usage-card" id="usage-card">
+                <div class="usage-header">
+                    <div>
+                        <div class="usage-title">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2">
+                                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                                <polyline points="17 6 23 6 23 12" />
+                            </svg>
+                            Memory Usage
+                        </div>
+                        <p class="usage-subtitle" id="usage-text">Loading...</p>
+                    </div>
+                    <button class="btn-primary" style="font-size:.85rem;padding:.4rem 1rem" id="usage-upgrade-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z" />
+                        </svg>
+                        Upgrade
+                    </button>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="usage-bar" style="width:0%"></div>
+                </div>
+            </div>
+
+            <!-- Capture Section -->
+            <div class="capture-card">
+                <div class="capture-title">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19" />
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                    Create New Memory
+                </div>
+                <div class="capture-tabs">
+                    <button class="capture-tab active" data-tab="voice">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" />
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                            <line x1="12" y1="19" x2="12" y2="22" />
+                        </svg>
+                        Voice
+                    </button>
+                    <button class="capture-tab" data-tab="image">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path
+                                d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                            <circle cx="12" cy="13" r="4" />
+                        </svg>
+                        Image
+                    </button>
+                    <button class="capture-tab" data-tab="pdf">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                        </svg>
+                        PDF
+                    </button>
+                </div>
+
+                <!-- Voice Tab -->
+                <div class="tab-content active" id="tab-voice">
+                    <div class="voice-controls" id="voice-controls">
+                        <div class="voice-duration" id="voice-duration" style="display:none">00:00</div>
+                        <div class="mic-btn-wrap">
+                            <div class="mic-btn-ping" id="mic-ping" style="display:none"></div>
+                            <button class="mic-btn idle" id="mic-btn">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2" id="mic-icon">
+                                    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" />
+                                    <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                                    <line x1="12" y1="19" x2="12" y2="22" />
+                                </svg>
+                            </button>
+                        </div>
+                        <p class="voice-status" id="voice-status">Click the microphone to start recording</p>
+                        <!-- Live preview during recording -->
+                        <div id="live-transcript"
+                            style="display:none;margin-top:1rem;width:100%;padding:.75rem 1rem;background:var(--gray-100);border-radius:.5rem;font-size:.9rem;color:var(--gray-600);min-height:2rem;text-align:left">
+                            <span style="color:var(--gray-400);font-style:italic"
+                                id="live-transcript-text">Listening...</span>
+                        </div>
+                    </div>
+                    <!-- Review area after stopping -->
+                    <div id="transcript-area" style="display:none;margin-top:1.5rem;width:100%">
+                        <div
+                            style="background:linear-gradient(135deg,rgba(124,58,237,.05),rgba(59,130,246,.05));border:1px solid var(--gray-200);border-radius:.75rem;padding:1.25rem">
+                            <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                    fill="none" stroke="var(--purple-600)" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                                <h4 style="margin:0;font-size:1rem;color:var(--gray-800)">Review Your Transcript</h4>
+                            </div>
+                            <p style="font-size:.85rem;color:var(--gray-500);margin-bottom:.75rem">Review and edit the
+                                text below to make sure it's correct, then confirm to save.</p>
+                            <textarea id="transcript-edit" rows="4"
+                                style="width:100%;padding:.75rem 1rem;border:1px solid var(--gray-300);border-radius:.5rem;font-size:.95rem;resize:vertical;line-height:1.5;font-family:inherit;transition:border-color .2s"
+                                placeholder="Your transcript will appear here..."></textarea>
+                            <div style="display:flex;gap:.75rem;margin-top:1rem">
+                                <button class="btn-primary"
+                                    style="flex:1;display:flex;align-items:center;justify-content:center;gap:.5rem"
+                                    id="save-voice-btn">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="20 6 9 17 4 12" />
+                                    </svg>
+                                    Confirm & Save
+                                </button>
+                                <button type="button"
+                                    style="flex:.6;padding:.6rem 1rem;border:1px solid var(--gray-300);border-radius:.5rem;background:#fff;color:var(--gray-700);font-size:.9rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.5rem;transition:all .2s"
+                                    id="rerecord-btn">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" />
+                                        <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                                        <line x1="12" y1="19" x2="12" y2="22" />
+                                    </svg>
+                                    Re-record
+                                </button>
+                                <button type="button"
+                                    style="padding:.6rem .8rem;border:1px solid var(--gray-300);border-radius:.5rem;background:#fff;color:var(--gray-500);cursor:pointer;transition:all .2s"
+                                    id="discard-btn" title="Discard">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="3 6 5 6 21 6" />
+                                        <path
+                                            d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Image Tab -->
+                <div class="tab-content" id="tab-image">
+                    <div id="image-upload-area">
+                        <div class="upload-grid">
+                            <button class="upload-zone" id="upload-file-zone">
+                                <div class="upload-zone-icon purple">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                        <polyline points="17 8 12 3 7 8" />
+                                        <line x1="12" y1="3" x2="12" y2="15" />
+                                    </svg>
+                                </div>
+                                <p class="upload-title">Upload from Device</p>
+                                <p class="upload-sub">PNG, JPG up to 5MB</p>
+                            </button>
+                            <button class="upload-zone" id="camera-zone">
+                                <div class="upload-zone-icon blue">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2">
+                                        <path
+                                            d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                                        <circle cx="12" cy="13" r="4" />
+                                    </svg>
+                                </div>
+                                <p class="upload-title">Take Photo</p>
+                                <p class="upload-sub">Use your camera</p>
+                            </button>
+                        </div>
+                        <input type="file" id="image-file-input" accept="image/*" hidden>
+                        <input type="file" id="camera-input" accept="image/*" capture="environment" hidden>
+                    </div>
+                    <div id="image-preview-area" style="display:none">
+                        <div class="image-preview-box">
+                            <img id="image-preview-img" src="" alt="Preview">
+                            <button class="remove-image-btn" id="remove-image-btn">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2">
+                                    <line x1="18" y1="6" x2="6" y2="18" />
+                                    <line x1="6" y1="6" x2="18" y2="18" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="form-group" style="margin-top:1rem">
+                            <label>Add Caption (Optional)</label>
+                            <textarea id="image-caption" class="input-no-icon" rows="3"
+                                placeholder="Describe this image or add context..."
+                                style="width:100%;padding:.75rem 1rem;border:1px solid var(--gray-300);border-radius:.5rem;resize:none"></textarea>
+                        </div>
+                        <button class="btn-primary" style="width:100%" id="save-image-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                <circle cx="8.5" cy="8.5" r="1.5" />
+                                <polyline points="21 15 16 10 5 21" />
+                            </svg>
+                            Save Memory
+                        </button>
+                    </div>
+                </div>
+
+                <!-- PDF Tab -->
+                <div class="tab-content" id="tab-pdf">
+                    <div id="pdf-upload-area">
+                        <button class="pdf-upload-zone" id="pdf-upload-zone">
+                            <div class="upload-zone-icon purple" style="margin:0 auto 1rem;width:5rem;height:5rem">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2" style="width:2.5rem;height:2.5rem">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                    <polyline points="14 2 14 8 20 8" />
+                                </svg>
+                            </div>
+                            <p class="upload-title" style="font-size:1.125rem;margin-bottom:.25rem">Upload PDF Document
+                            </p>
+                            <p class="upload-sub">Click to browse or drag and drop</p>
+                            <p class="upload-sub" style="font-size:.75rem;margin-top:.5rem;color:var(--gray-500)">
+                                Maximum file size: 10MB</p>
+                        </button>
+                        <input type="file" id="pdf-file-input" accept=".pdf" hidden>
+                        <div class="pdf-info-box gray" style="margin-top:1rem">
+                            <h4>💡 Supported Features:</h4>
+                            <ul style="list-style:none">
+                                <li>• Extract text from multi-page PDFs</li>
+                                <li>• Smart chunking for better search results</li>
+                                <li>• Full-text semantic search across all pages</li>
+                                <li>• Automatic categorization and tagging</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div id="pdf-file-area" style="display:none">
+                        <div class="pdf-file-info">
+                            <div class="pdf-file-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                    <polyline points="14 2 14 8 20 8" />
+                                </svg></div>
+                            <div class="pdf-file-details">
+                                <p class="pdf-file-name" id="pdf-file-name"></p>
+                                <p class="pdf-file-size" id="pdf-file-size"></p>
+                            </div>
+                            <button class="remove-file-btn" id="remove-pdf-btn"><svg xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="18" y1="6" x2="6" y2="18" />
+                                    <line x1="6" y1="6" x2="18" y2="18" />
+                                </svg></button>
+                        </div>
+                        <button class="btn-primary" style="width:100%;margin-top:1rem" id="process-pdf-btn">Process
+                            PDF</button>
+                    </div>
+                    <div id="pdf-processing-area" style="display:none">
+                        <div class="pdf-file-info">
+                            <div class="pdf-file-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                    <polyline points="14 2 14 8 20 8" />
+                                </svg></div>
+                            <div class="pdf-file-details" style="flex:1">
+                                <p class="pdf-file-name" id="pdf-processing-name"></p>
+                                <div class="processing-bar">
+                                    <div class="processing-fill" id="pdf-progress-bar" style="width:0%"></div>
+                                </div>
+                                <p class="processing-text" id="pdf-progress-text">0% complete</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Memories -->
+            <div class="memories-card">
+                <div class="memories-header">
+                    <div class="memories-title">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M12 3l1.9 5.8h6.1l-5 3.6 1.9 5.8L12 14.6l-5 3.6 1.9-5.8-5-3.6h6.1z" />
+                        </svg>
+                        Recent Memories
+                    </div>
+                    <div class="search-input-wrap">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="11" cy="11" r="8" />
+                            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        </svg>
+                        <input type="text" id="dash-search" placeholder="Search memories...">
+                    </div>
+                </div>
+                <div class="category-filters" id="category-filters"></div>
+                <div class="memory-list" id="memory-list">
+                    <div class="empty-state">
+                        <div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8" />
+                                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                            </svg></div>
+                        <h3>No memories yet</h3>
+                        <p>Start capturing your thoughts to see them here</p>
+                    </div>
+                </div>
+                <div style="text-align:center;margin-top:1.5rem" id="view-all-wrap" style="display:none">
+                    <a href="/memories" class="view-all-link">View All Memories
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8" />
+                            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Premium Modal -->
+    <div id="premium-modal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div>
+                    <h2><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z" />
+                        </svg> Upgrade to Premium</h2>
+                    <p>Unlock unlimited memories and premium features</p>
+                </div>
+                <button class="modal-close" id="close-premium-modal"><svg xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg></button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-price-wrap">
+                    <div class="modal-price-box">
+                        <div class="modal-price-inner">
+                            <div class="modal-price">₹299<span>/month</span></div>
+                            <p class="modal-price-sub">or $4.99/month</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-features-title"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                    </svg> What's Included</div>
+                <div class="modal-features-grid">
+                    <div class="modal-feature-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                            fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12" />
+                        </svg><span>Unlimited memories</span></div>
+                    <div class="modal-feature-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                            fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12" />
+                        </svg><span>AI-powered memory summaries</span></div>
+                    <div class="modal-feature-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                            fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12" />
+                        </svg><span>Advanced search filters</span></div>
+                    <div class="modal-feature-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                            fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12" />
+                        </svg><span>Priority customer support</span></div>
+                    <div class="modal-feature-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                            fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12" />
+                        </svg><span>Export your memories</span></div>
+                    <div class="modal-feature-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                            fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12" />
+                        </svg><span>Custom categories</span></div>
+                    <div class="modal-feature-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                            fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12" />
+                        </svg><span>Ad-free experience</span></div>
+                    <div class="modal-feature-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                            fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12" />
+                        </svg><span>Early access to new features</span></div>
+                </div>
+                <div class="modal-comparison">
+                    <h3>Free vs Premium</h3>
+                    <div class="modal-compare-grid">
+                        <div>
+                            <p>Free</p>
+                            <ul>
+                                <li>10 memories</li>
+                                <li>Basic search</li>
+                                <li>Standard support</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <p class="purple">Premium</p>
+                            <ul>
+                                <li>Unlimited memories</li>
+                                <li>Advanced AI search</li>
+                                <li>Priority support</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-primary" id="upgrade-now-btn"><svg xmlns="http://www.w3.org/2000/svg" width="20"
+                            height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z" />
+                        </svg> Upgrade Now</button>
+                    <button class="btn-cancel" id="cancel-premium-btn">Maybe Later</button>
+                </div>
+                <p class="modal-security">🔒 Secure payment • Cancel anytime • 30-day money-back guarantee</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/script.js"></script>
+    <script src="/static/js/dashboard.js"></script>
+</body>
+
+</html>

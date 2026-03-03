@@ -3,429 +3,292 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#2563eb">
-    <title>MemoAI - Intelligent Personal Memory Assistant</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="MemoAI - Your AI-powered second brain. Capture, categorize, and retrieve your thoughts using voice, images, and PDFs with advanced AI and vector search.">
+    <title>MemoAI - Your AI-Powered Second Brain</title>
     <link rel="stylesheet" href="/static/css/styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script>
-        // Check if user is logged in
         const user = sessionStorage.getItem('user');
-        if (!user) {
-            // Check if user has visited before
-            const hasVisited = localStorage.getItem('hasVisited');
-            if (!hasVisited) {
-                // First time visitor - redirect to register
-                window.location.href = '/register';
-            } else {
-                // Returning visitor - redirect to login
-                window.location.href = '/login';
-            }
-        }
+        if (user) { window.location.href = '/dashboard'; }
     </script>
 </head>
 
 <body>
-    <!-- Custom Cursor Elements -->
-    <div class="cursor-follower"></div>
-    <div class="cursor-dot"></div>
-
     <!-- Navigation -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="logo">
-                <h2>MemoAI</h2>
+    <nav class="nav-landing">
+        <div class="nav-inner">
+            <a href="/" class="nav-logo">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2a9 9 0 0 1 9 9c0 3.1-1.6 5.8-4 7.4V21H7v-2.6A9 9 0 0 1 12 2z" />
+                    <path d="M9 21v1a3 3 0 0 0 6 0v-1" />
+                    <path d="M10 8h4" />
+                    <path d="M10 12h4" />
+                </svg>
+                <span class="gradient-text">MemoAI</span>
+            </a>
+            <div class="nav-links">
+                <a href="/login" class="nav-link">Login</a>
+                <a href="/register" class="btn-primary">Get Started</a>
             </div>
-            <div class="hamburger-menu" id="hamburger-menu">
-                <span class="bar"></span>
-                <span class="bar"></span>
-                <span class="bar"></span>
-            </div>
-            <ul class="nav-menu" id="nav-menu">
-                <li><a href="#home">Home</a></li>
-                <li><a href="#features">Features</a></li>
-                <li><a href="#demo">Demo</a></li>
-                <li><a href="#about">About</a></li>
-                <li><a href="/contact">Contact</a></li>
-                <li><a href="/login" id="nav-login">Login</a></li>
-                <li><a href="/register" id="nav-register">Register</a></li>
-                <li><a href="#" id="nav-logout" style="display: none;">Logout</a></li>
-            </ul>
         </div>
     </nav>
 
     <!-- Hero Section -->
-    <section id="home" class="hero" data-animate>
-        <div class="hero-content">
-            <h1 data-animate>Record, organize, and search your memories with AI</h1>
-            <p data-animate>MemoAI captures your voice notes and images, automatically organizes them by topic, and lets
-                you find anything using natural language search.</p>
-            <div class="hero-stats" data-animate>
-                <div class="stat" data-animate>
-                    <span class="stat-number">99%</span>
-                    <p>Accuracy</p>
+    <section class="hero-section">
+        <div class="hero-grid">
+            <div>
+                <div class="hero-badge">Your AI-Powered Second Brain</div>
+                <h1 class="hero-title">Never Forget<br><span class="gradient-text">Anything Again</span></h1>
+                <p class="hero-subtitle">MemoAI intelligently captures, categorizes, and retrieves your thoughts,
+                    conversations, and visual memories using advanced AI and vector search technology.</p>
+                <div class="hero-cta">
+                    <a href="/register" class="btn-primary btn-primary-lg">
+                        Start Free Trial
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 12h14" />
+                            <path d="m12 5 7 7-7 7" />
+                        </svg>
+                    </a>
+                    <a href="/login" class="btn-outline btn-outline-lg">View Demo</a>
                 </div>
-                <div class="stat" data-animate>
-                    <span class="stat-number">10x</span>
-                    <p>Faster</p>
-                </div>
-                <div class="stat" data-animate>
-                    <span class="stat-number">24/7</span>
-                    <p>Availability</p>
+                <div class="hero-checks">
+                    <div class="hero-check">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                        <span>10 Free Memories</span>
+                    </div>
+                    <div class="hero-check">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                        <span>No Credit Card</span>
+                    </div>
                 </div>
             </div>
-            <button class="cta-btn interactive-element" onclick="scrollToSection('demo')" data-animate>Try Demo</button>
-            <div class="hero-features" data-animate>
-                <div class="feature-tag" data-animate>Voice Recording</div>
-                <div class="feature-tag" data-animate>Image Storage</div>
-                <div class="feature-tag" data-animate>AI Organization</div>
-                <div class="feature-tag" data-animate>Natural Search</div>
+            <div class="hero-image-wrap">
+                <div class="hero-image-glow"></div>
+                <img src="https://images.unsplash.com/photo-1737505599159-5ffc1dcbc08f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800"
+                    alt="AI Brain Memory" class="hero-image">
             </div>
         </div>
     </section>
 
     <!-- Features Section -->
-    <section id="features" class="features">
-        <div class="container">
-            <h2>Key Features</h2>
-            <div class="feature-grid">
-                <div class="feature-card">
-                    <div class="icon">🎤</div>
-                    <h3>Voice Recognition</h3>
-                    <p>Convert your spoken thoughts to text instantly using advanced speech recognition.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="icon">🧠</div>
-                    <h3>Smart Categorization</h3>
-                    <p>Automatically categorize your thoughts into meaningful topics for better organization.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="icon">🖼️</div>
-                    <h3>Visual Memory</h3>
-                    <p>Store and retrieve visual memories linked with contextual information.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="icon">🔍</div>
-                    <h3>Intelligent Search</h3>
-                    <p>Find your memories using natural language queries across all modalities.</p>
-                </div>
+    <section class="features-section">
+        <div class="max-w-7xl text-center">
+            <h2 class="section-title">Powerful Features</h2>
+            <p class="section-subtitle">Everything you need to manage your memories</p>
+        </div>
+        <div class="features-grid max-w-7xl">
+            <div class="feature-card">
+                <div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" />
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                        <line x1="12" y1="19" x2="12" y2="22" />
+                    </svg></div>
+                <h3>Voice Capture</h3>
+                <p>Speak your thoughts naturally and let AI transcribe and organize them instantly.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                        <circle cx="12" cy="13" r="4" />
+                    </svg></div>
+                <h3>Image Analysis</h3>
+                <p>Upload images and get AI-powered descriptions and context automatically.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                        <line x1="16" y1="13" x2="8" y2="13" />
+                        <line x1="16" y1="17" x2="8" y2="17" />
+                        <polyline points="10 9 9 9 8 9" />
+                    </svg></div>
+                <h3>PDF Processing</h3>
+                <p>Upload PDFs and extract text with smart chunking for easy searching.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8" />
+                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    </svg></div>
+                <h3>Semantic Search</h3>
+                <p>Find memories using natural language with vector-powered similarity search.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 3l1.9 5.8h6.1l-5 3.6 1.9 5.8L12 14.6l-5 3.6 1.9-5.8-5-3.6h6.1z" />
+                    </svg></div>
+                <h3>AI Categorization</h3>
+                <p>Automatic classification into 8 smart categories with AI-generated tags.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2a9 9 0 0 1 9 9c0 3.1-1.6 5.8-4 7.4V21H7v-2.6A9 9 0 0 1 12 2z" />
+                        <path d="M9 21v1a3 3 0 0 0 6 0v-1" />
+                    </svg></div>
+                <h3>Memory Summaries</h3>
+                <p>Get AI-generated summaries of your recent thoughts and activities.</p>
             </div>
         </div>
     </section>
 
-    <!-- Demo Section -->
-    <section id="demo" class="demo">
-        <div class="container">
-            <h2>Demo Interface</h2>
-            <div class="demo-container">
-                <div class="demo-panel">
-                    <h3>Voice Input</h3>
-                    <div class="voice-input-section">
-                        <button id="start-recording" class="record-btn">
-                            <span id="mic-icon">🎤</span>
-                            <span id="recording-indicator"></span>
-                        </button>
-                        <p id="recording-status">Click mic to start recording</p>
-                        <textarea id="voice-output" placeholder="Transcribed text will appear here..."
-                            spellcheck="true"></textarea>
-                        <div class="voice-actions">
-                            <button id="submit-voice" class="primary-btn" disabled>Submit Memory</button>
-                            <button id="clear-voice" class="secondary-btn">Clear</button>
-                            <div id="saving-spinner" class="spinner" style="display: none;"></div>
-                            <span id="save-status" class="save-status"></span>
-                        </div>
-                        <div class="voice-tips">
-                            <p><small>💡 Tip: Speak clearly and minimize background noise for best results</small></p>
-                        </div>
-                    </div>
-                </div>
+    <!-- Categories Section -->
+    <section class="categories-section">
+        <div class="max-w-7xl text-center">
+            <h2 class="section-title">Smart Categorization</h2>
+            <p class="section-subtitle">AI automatically organizes your memories into 8 categories</p>
+        </div>
+        <div class="categories-grid max-w-7xl">
+            <div class="category-chip">Daily Life</div>
+            <div class="category-chip">Work & Meetings</div>
+            <div class="category-chip">Learning & Growth</div>
+            <div class="category-chip">Health & Fitness</div>
+            <div class="category-chip">Money & Shopping</div>
+            <div class="category-chip">Entertainment</div>
+            <div class="category-chip">Ideas & Creativity</div>
+            <div class="category-chip">General</div>
+        </div>
+    </section>
 
-                <div class="demo-panel">
-                    <h3>Image Upload</h3>
-                    <div class="image-upload-section">
-                        <div class="upload-area" id="upload-area">
-                            <p>Drag & drop an image here or click to upload</p>
-                            <input type="file" id="image-upload" accept="image/*" hidden>
-                            <button id="use-camera-btn" class="secondary-btn" style="margin-top: 1rem;">📷 Use
-                                Camera</button>
-                        </div>
-                        <div id="camera-container" class="camera-container" style="display: none;">
-                            <video id="camera-video" autoplay playsinline></video>
-                            <canvas id="camera-canvas" style="display: none;"></canvas>
-                            <div class="camera-controls">
-                                <button id="toggle-camera-btn" class="secondary-btn" title="Switch Camera">🔄</button>
-                                <button id="capture-photo-btn" class="primary-btn">📸 Capture Photo</button>
-                                <button id="cancel-camera-btn" class="secondary-btn">Cancel</button>
-                            </div>
-                        </div>
-                        <div id="image-preview" class="image-preview"></div>
-                        <div id="image-description-section" style="display: none;">
-                            <textarea id="image-description" placeholder="Describe this image (optional)"></textarea>
-                            <div class="image-actions">
-                                <button id="submit-image" class="primary-btn">Save Image to Memory</button>
-                                <button id="clear-image" class="secondary-btn">Clear Image</button>
-                                <div id="image-saving-spinner" class="spinner" style="display: none;"></div>
-                                <span id="image-save-status" class="save-status"></span>
-                            </div>
-                        </div>
-                        <div class="image-tips">
-                            <p><small>📷 Tip: Upload images with clear subjects for better analysis</small></p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="demo-panel">
-                    <h3>Processing Results</h3>
-                    <div class="results-section">
-                        <div class="result-item">
-                            <h4>Category:</h4>
-                            <p id="category-result">Not categorized yet</p>
-                        </div>
-                        <div class="result-item">
-                            <h4>Context:</h4>
-                            <p id="context-result">No context available</p>
-                        </div>
-                        <div class="result-item">
-                            <h4>Tags:</h4>
-                            <p id="tags-result">No tags generated</p>
-                        </div>
-                        <button id="process-btn" class="primary-btn">Process Memory</button>
-                        <div class="processing-tips">
-                            <p><small>🧠 AI is analyzing your input to categorize and store it</small></p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="demo-panel">
-                    <h3>Search Memories</h3>
-                    <div class="search-section">
-                        <input type="text" id="search-query" placeholder="Enter keywords to search your memories...">
-                        <div class="search-actions">
-                            <button id="search-btn" class="primary-btn">Search</button>
-                            <button id="summary-btn" class="secondary-btn">✨ AI Summary</button>
-                        </div>
-                        <div id="summary-result" class="summary-result" style="display: none;">
-                            <h4>Recent Summary</h4>
-                            <p id="summary-text"></p>
-                        </div>
-                        <div id="search-results" class="search-results">
-                            <p class="no-results">No search results yet. Process some memories first!</p>
-                        </div>
-                        <div class="search-tips">
-                            <p><small>🔍 Try searching with keywords, phrases, or categories</small></p>
-                        </div>
-                    </div>
-                </div>
+    <!-- How It Works -->
+    <section class="how-section">
+        <div class="max-w-7xl text-center">
+            <h2 class="section-title">How It Works</h2>
+            <p class="section-subtitle">Simple, fast, and intelligent</p>
+        </div>
+        <div class="how-grid max-w-7xl">
+            <div class="how-step">
+                <div class="how-number">1</div>
+                <h3>Capture</h3>
+                <p>Speak, upload images, or add PDFs. MemoAI captures everything instantly.</p>
             </div>
-
-            <div class="demo-intro">
-                <h3>How It Works</h3>
-                <div class="workflow-steps">
-                    <div class="step">
-                        <div class="step-number">1</div>
-                        <h4>Record Voice</h4>
-                        <p>Capture your thoughts, conversations, or notes using our speech recognition</p>
-                    </div>
-                    <div class="step">
-                        <div class="step-number">2</div>
-                        <h4>Add Visual Context</h4>
-                        <p>Upload related images to enrich your memory with visual information</p>
-                    </div>
-                    <div class="step">
-                        <div class="step-number">3</div>
-                        <h4>AI Processing</h4>
-                        <p>Our AI analyzes and categorizes your content for smart organization</p>
-                    </div>
-                    <div class="step">
-                        <div class="step-number">4</div>
-                        <h4>Retrieve & Search</h4>
-                        <p>Easily find your memories using natural language queries</p>
-                    </div>
-                </div>
+            <div class="how-step">
+                <div class="how-number">2</div>
+                <h3>Process</h3>
+                <p>AI analyzes, categorizes, and generates tags automatically with advanced ML.</p>
+            </div>
+            <div class="how-step">
+                <div class="how-number">3</div>
+                <h3>Retrieve</h3>
+                <p>Search using natural language and find exactly what you need, instantly.</p>
             </div>
         </div>
     </section>
 
-    <!-- About Section -->
-    <section id="about" class="about">
-        <div class="container">
-            <h2>About MemoAI</h2>
-            <div class="about-content">
-                <div class="about-text">
-                    <h3>How MemoAI Works</h3>
-                    <p>MemoAI is an intelligent personal memory assistant that combines multiple AI technologies to help
-                        you capture and organize your thoughts, conversations, and visual memories.</p>
-
-                    <h4>Key Components:</h4>
-                    <ul>
-                        <li><strong>Voice Recognition:</strong> Transcribes spoken words using Whisper ASR technology
-                        </li>
-                        <li><strong>Text Categorization:</strong> Uses Google's Gemini AI to classify content into
-                            meaningful categories</li>
-                        <li><strong>Visual Analysis:</strong> Analyzes images and extracts contextual information</li>
-                        <li><strong>Memory Storage:</strong> Embeds and stores memories using vector similarity for
-                            retrieval</li>
-                    </ul>
-
-                    <h4>How to Use:</h4>
-                    <ol>
-                        <li>Record your voice using the microphone button</li>
-                        <li>Upload an image if relevant</li>
-                        <li>Click "Process Memory" to categorize and store your input</li>
-                        <li>Use natural language queries to retrieve your memories</li>
-                    </ol>
-
-                    <h4>Project Overview:</h4>
-                    <p>MemoAI addresses the challenge of information overload by creating an intelligent system that
-                        automatically organizes your digital memories. Unlike traditional note-taking apps, MemoAI
-                        understands the context and meaning of your inputs, making retrieval much more intuitive.</p>
-
-                    <h4>Real-world Applications:</h4>
-                    <ul>
-                        <li><strong>Personal Knowledge Management:</strong> Store and retrieve important information,
-                            ideas, and insights</li>
-                        <li><strong>Meeting Summaries:</strong> Capture spoken content and related visuals from meetings
-                        </li>
-                        <li><strong>Learning Enhancement:</strong> Organize study materials combining voice notes and
-                            visual aids</li>
-                        <li><strong>Memory Preservation:</strong> Create rich, searchable records of experiences and
-                            important moments</li>
-                    </ul>
-
-                    <p class="note"><strong>Note:</strong> This demo simulates the functionality. In a production
-                        environment, it would connect to the actual AI services.</p>
-                </div>
-
-                <div class="tech-stack">
-                    <h3>Technology Stack</h3>
-                    <ul>
-                        <li>Transformers (Whisper ASR)</li>
-                        <li>Google Generative AI (Gemini)</li>
-                        <li>FAISS Vector Database</li>
-                        <li>Sentence Transformers</li>
-                        <li>LangChain Framework</li>
-                        <li>PyTorch</li>
-                        <li>Librosa (Audio Processing)</li>
-                        <li>PIL (Image Processing)</li>
-                    </ul>
-
-                    <div class="project-stats">
-                        <div class="stat-item">
-                            <span class="number">100+</span>
-                            <p>Hours of Development</p>
-                        </div>
-                        <div class="stat-item">
-                            <span class="number">5</span>
-                            <p>Core Modules</p>
-                        </div>
-                        <div class="stat-item">
-                            <span class="number">∞</span>
-                            <p>Potential Uses</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <!-- Pricing -->
+    <section class="pricing-section">
+        <div class="max-w-7xl text-center">
+            <h2 class="section-title">Simple Pricing</h2>
+            <p class="section-subtitle">Start free, upgrade when you need more</p>
         </div>
-    </section>
-
-    <!-- Testimonials Section -->
-    <section class="testimonials">
-        <div class="container">
-            <h2>What Users Say</h2>
-            <div class="testimonial-grid">
-                <div class="testimonial-card">
-                    <div class="rating">★★★★★</div>
-                    <p>"MemoAI has transformed how I capture and organize my ideas. The voice-to-memory feature is
-                        incredibly accurate and intuitive."</p>
-                    <div class="user-info">
-                        <div class="avatar">JD</div>
-                        <div class="user-details">
-                            <h4>John Doe</h4>
-                            <p>Researcher</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="testimonial-card">
-                    <div class="rating">★★★★★</div>
-                    <p>"The combination of voice notes and image analysis makes this the perfect tool for documenting my
-                        learning journey."</p>
-                    <div class="user-info">
-                        <div class="avatar">SJ</div>
-                        <div class="user-details">
-                            <h4>Sarah Johnson</h4>
-                            <p>Student</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="testimonial-card">
-                    <div class="rating">★★★★★</div>
-                    <p>"Finally, a tool that understands the context of my meetings and helps me retrieve important
-                        information effortlessly."</p>
-                    <div class="user-info">
-                        <div class="avatar">MR</div>
-                        <div class="user-details">
-                            <h4>Michael Roberts</h4>
-                            <p>Project Manager</p>
-                        </div>
-                    </div>
-                </div>
+        <div class="pricing-grid">
+            <div class="price-card">
+                <h3>Free</h3>
+                <div class="price-amount">$0<span>/month</span></div>
+                <ul class="price-features">
+                    <li><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="20 6 9 17 4 12" />
+                        </svg> 10 memories</li>
+                    <li><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="20 6 9 17 4 12" />
+                        </svg> Voice, image & PDF capture</li>
+                    <li><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="20 6 9 17 4 12" />
+                        </svg> AI categorization</li>
+                    <li><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="20 6 9 17 4 12" />
+                        </svg> Semantic search</li>
+                </ul>
+                <a href="/register" class="btn-outline" style="width:100%">Get Started</a>
+            </div>
+            <div class="price-card popular">
+                <div class="price-badge">Popular</div>
+                <h3>Premium</h3>
+                <div class="price-amount">₹299<span>/month</span></div>
+                <ul class="price-features">
+                    <li><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="20 6 9 17 4 12" />
+                        </svg> <strong>Unlimited memories</strong></li>
+                    <li><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="20 6 9 17 4 12" />
+                        </svg> Everything in Free</li>
+                    <li><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="20 6 9 17 4 12" />
+                        </svg> AI memory summaries</li>
+                    <li><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="20 6 9 17 4 12" />
+                        </svg> Priority support</li>
+                </ul>
+                <a href="/register" class="btn-primary" style="width:100%">Upgrade to Premium</a>
             </div>
         </div>
     </section>
 
     <!-- Footer -->
     <footer class="footer">
-        <div class="container">
-            <p>&copy; 2024 MemoAI - Intelligent Personal Memory Assistant</p>
+        <div class="footer-grid">
+            <div>
+                <div class="footer-logo">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <path d="M12 2a9 9 0 0 1 9 9c0 3.1-1.6 5.8-4 7.4V21H7v-2.6A9 9 0 0 1 12 2z" />
+                        <path d="M9 21v1a3 3 0 0 0 6 0v-1" />
+                    </svg>
+                    <span>MemoAI</span>
+                </div>
+                <p class="footer-desc">Your AI-powered second brain for capturing and retrieving memories.</p>
+            </div>
+            <div>
+                <h4>Product</h4>
+                <ul>
+                    <li><a href="/login">Features</a></li>
+                    <li><a href="/register">Pricing</a></li>
+                    <li><a href="/login">Demo</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4>Company</h4>
+                <ul>
+                    <li><a href="/contact">Contact</a></li>
+                    <li><a href="#">About</a></li>
+                    <li><a href="#">Privacy</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4>Support</h4>
+                <ul>
+                    <li><a href="#">Documentation</a></li>
+                    <li><a href="#">API</a></li>
+                    <li><a href="/contact">Help Center</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 MemoAI. All rights reserved. Built with AI technology.</p>
         </div>
     </footer>
-
-    <!-- Payment Modal -->
-    <div id="payment-modal" class="modal payment-modal">
-        <div class="modal-content glass">
-            <div class="modal-header">
-                <div class="premium-badge"><i class="fas fa-crown"></i> Premium</div>
-                <h2>Upgrade to Premium</h2>
-                <p>You've reached your free limit of 10 memories. Upgrade now for unlimited storage and advanced AI
-                    features.</p>
-                <span class="close-modal" id="close-payment-modal">&times;</span>
-            </div>
-            <div class="modal-body">
-                <div class="pricing-card">
-                    <div class="price-header">
-                        <span class="currency">₹</span>
-                        <span class="amount" id="premium-amount">299</span>
-                        <span class="period">/month</span>
-                    </div>
-                    <ul class="features-list">
-                        <li><i class="fas fa-check-circle"></i> Unlimited Memories</li>
-                        <li><i class="fas fa-check-circle"></i> Advanced AI Analysis</li>
-                        <li><i class="fas fa-check-circle"></i> Priority Processing</li>
-                        <li><i class="fas fa-check-circle"></i> Early access to new features</li>
-                    </ul>
-                    <button id="pay-now-btn" class="cta-btn">Pay Now with Razorpay</button>
-                </div>
-                <div class="payment-security">
-                    <p><i class="fas fa-shield-alt"></i> Secure Payment Gateway</p>
-                    <div class="payment-icons">
-                        <i class="fab fa-cc-visa"></i>
-                        <i class="fab fa-cc-mastercard"></i>
-                        <i class="fab fa-google-pay"></i>
-                        <i class="fas fa-money-check-alt"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script src="/static/js/script.js"></script>
 </body>
 
 </html>

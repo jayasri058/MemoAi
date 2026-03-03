@@ -218,18 +218,23 @@ class DatabaseManager:
             print(f"[Auth] Error setting premium: {e}")
             return False
 
-    def _resolve_user_ids(self, user_id: int) -> List[int]:
+    def _resolve_user_ids(self, user_id) -> List[int]:
         """
         Helper to get all user IDs associated with a user (current SQLite ID + legacy Pinecone ID).
         This ensures users can access their old data after migration to SQLite auth.
+        If user_id is already a list, return it as-is to avoid double-resolution.
         """
+        # If already a list, return as-is (already resolved)
+        if isinstance(user_id, list):
+            return user_id
+
         ids = [user_id]
         if not user_id:
             return ids
             
         try:
             # Get user email to look up legacy account
-            user = self.get_user_by_id(user_id)
+            user = self.get_user_by_id(int(user_id))
             if user:
                 # Check if this user exists in Pinecone (legacy data)
                 # We use the raw Pinecone manager access here
@@ -260,9 +265,9 @@ class DatabaseManager:
     def get_memory(self, memory_id: int, user_id: Optional[int] = None) -> Optional[Dict]:
         return self.pinecone.get_memory(memory_id, user_id=user_id)
 
-    def get_all_memories(self, user_id: Optional[int] = None) -> List[Dict]:
+    def get_all_memories(self, user_id = None) -> List[Dict]:
         user_ids_to_query = user_id
-        if user_id:
+        if user_id is not None:
             user_ids_to_query = self._resolve_user_ids(user_id)
         return self.pinecone.get_all_memories(user_id=user_ids_to_query)
 

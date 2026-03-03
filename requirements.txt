@@ -27,3 +27,9 @@ python-dotenv
 werkzeug
 PyPDF2
 passlib
+
+flask-limiter 
+numpy 
+faiss-cpu 
+pydantic 
+pandas
