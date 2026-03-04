@@ -19,20 +19,6 @@ from functools import wraps
 from models import get_db_manager
 from PIL import Image, ExifTags
 
-# PDF handling imports
-try:
-    from PyPDF2 import PdfReader
-    PDF_SUPPORT = True
-    print("PDF support enabled (PyPDF2)")
-except ImportError:
-    try:
-        import pypdf
-        from pypdf import PdfReader
-        PDF_SUPPORT = True
-        print("PDF support enabled (pypdf)")
-    except ImportError:
-        PDF_SUPPORT = False
-        print("PDF support disabled. Install with: pip install PyPDF2")
 
 # Initialize Flask app
 app = Flask(__name__, static_folder='static', template_folder='templates')
@@ -66,7 +52,7 @@ GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 
 # Configuration
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf'}
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Create upload folder if it doesn't exist
@@ -115,24 +101,6 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-def extract_pdf_text(pdf_path):
-    """Extract text from PDF file"""
-    if not PDF_SUPPORT:
-        return None
-    
-    try:
-        reader = PdfReader(pdf_path)
-        text_content = []
-        
-        for page_num, page in enumerate(reader.pages, 1):
-            text = page.extract_text()
-            if text.strip():
-                text_content.append(f"[Page {page_num}]\n{text}")
-        
-        return "\n\n".join(text_content)
-    except Exception as e:
-        print(f"Error extracting PDF text: {e}")
-        return None
 
 def get_embedding(text):
     """Get embedding for text using sentence transformer"""
@@ -179,35 +147,6 @@ def add_to_vector_index(memory_id, text, user_id, metadata=None):
         user_id=user_id
     )
 
-def add_pdf_to_vector_index(memory_id, pdf_text, user_id, metadata=None):
-    """Split PDF into chunks and add multiple vectors to Pinecone"""
-    if pinecone_manager is None or not embedder:
-        return
-        
-    chunks = chunk_text(pdf_text, chunk_size=600, overlap=120)
-    
-    import re
-    chunk_list = []
-    
-    for i, chunk in enumerate(chunks):
-        embedding = get_embedding(chunk)
-        
-        chunk_metadata = (metadata or {}).copy()
-        chunk_metadata['text'] = chunk
-        chunk_metadata['chunk_index'] = i
-        chunk_metadata['memory_id'] = memory_id
-        chunk_metadata['type'] = 'pdf_chunk'
-        
-        page_match = re.search(r'\[Page (\d+)\]', chunk)
-        if page_match:
-            chunk_metadata['page_number'] = int(page_match.group(1))
-            
-        chunk_list.append({
-            'vector': embedding.tolist(),
-            'metadata': chunk_metadata
-        })
-    
-    pinecone_manager.save_memory_chunks(memory_id, user_id, chunk_list)
 
 def search_similar_vectors(query_text, user_id, top_k=5, threshold=0.3):
     """Search for similar vectors using Pinecone, scoped by user"""
@@ -347,9 +286,6 @@ def process_memory(user_id):
         search_text = f"{result.get('content', '')} {result.get('context', '')} {' '.join(result.get('tags', []))}"
         embedding = get_embedding(search_text)
         
-        # Determine if it's a PDF
-        is_pdf = image_path and image_path.lower().endswith('.pdf')
-        
         # Build memory data
         memory_data = {
             'title': result.get('title', ''),
@@ -359,23 +295,13 @@ def process_memory(user_id):
             'context': result.get('context', ''),
             'tags': result.get('tags', []),
             'image_path': image_path,
-            'has_image': bool(image_path) and not is_pdf,
-            'type': 'pdf' if is_pdf else ('image' if image_path else 'voice'),
+            'image_description': result.get('image_description', ''),
+            'has_image': bool(image_path),
+            'type': 'image' if image_path else 'voice',
         }
         
         # Save to Pinecone with embedding
         memory_id = db_manager.save_memory(user_id, memory_data, vector=embedding.tolist())
-        
-        # For PDFs, also add chunked vectors
-        if is_pdf:
-            vector_metadata = {
-                'category': result.get('category', 'General'),
-                'tags': json.dumps(result.get('tags', [])),
-                'has_image': False,
-                'date': datetime.now().strftime('%Y-%m-%d'),
-                'type': 'pdf'
-            }
-            add_pdf_to_vector_index(memory_id, result.get('content', ''), user_id, vector_metadata)
         
         # Add metadata
         result['id'] = memory_id
@@ -841,12 +767,6 @@ def search_memories(user_id):
                 if not memory.get('image_description') and memory.get('context', '').startswith('Image Analysis: '):
                     memory['image_description'] = memory['context'].replace('Image Analysis: ', '')
 
-                if metadata.get('type') == 'pdf_chunk':
-                    memory['is_pdf_chunk'] = True
-                    memory['page_number'] = metadata.get('page_number')
-                    chunk_text_content = metadata.get('text', '')
-                    page_info = f"[Page {memory['page_number']}] " if memory['page_number'] else ""
-                    memory['snippet'] = f"{page_info}{chunk_text_content[:200]}..."
 
                 similar_results_memories.append(memory)
 

@@ -7,9 +7,24 @@
     <meta name="description" content="MemoAI - All Memories">
     <title>All Memories - MemoAI</title>
     <link rel="stylesheet" href="/static/css/styles.css">
+    <style>
+        body {
+            display: none;
+        }
+
+        .authorized body {
+            display: block !important;
+        }
+    </style>
     <script>
-        const user = JSON.parse(sessionStorage.getItem('user') || 'null');
-        if (!user) { window.location.href = '/login'; }
+        (function () {
+            const user = JSON.parse(sessionStorage.getItem('user') || 'null');
+            if (!user) {
+                window.location.href = '/login';
+            } else {
+                document.documentElement.classList.add('authorized');
+            }
+        })();
     </script>
 </head>
 
@@ -18,7 +33,7 @@
     <div class="dashboard-page">
         <header class="dash-header">
             <div class="dash-header-inner">
-                <a href="/" class="auth-back" style="margin-bottom:0">
+                <a href="/dashboard" class="auth-back" style="margin-bottom:0">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
                         <line x1="19" y1="12" x2="5" y2="12" />
@@ -26,7 +41,7 @@
                     </svg>
                     Back to Dashboard
                 </a>
-                <a href="/" class="nav-logo">
+                <a href="/dashboard" class="nav-logo">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M12 2a9 9 0 0 1 9 9c0 3.1-1.6 5.8-4 7.4V21H7v-2.6A9 9 0 0 1 12 2z" />
@@ -114,7 +129,7 @@
             <div id="search-result-info" class="search-result-count" style="display:none"></div>
 
             <div class="memory-list" id="memories-list">
-                <div class="empty-state">
+                <div class="empty-state initial-hidden">
                     <div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2">
                             <circle cx="11" cy="11" r="8" />
@@ -143,6 +158,7 @@
                     document.getElementById('memory-count-text').textContent =
                         allMemories.length + (allMemories.length === 1 ? ' memory' : ' memories') + ' stored';
                     renderAll();
+                    document.querySelector('.empty-state.initial-hidden')?.classList.remove('initial-hidden');
                 } catch (e) { console.error(e); }
             }
 
@@ -178,7 +194,7 @@
                     <div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
                     <h3>No memories found</h3>
                     <p style="margin-bottom:1.5rem">${query ? 'Try adjusting your search terms or filters' : 'Start capturing your thoughts to see them here'}</p>
-                    <a href="/" class="btn-primary">Create Your First Memory</a>
+                    <a href="/dashboard" class="btn-primary">Create Your First Memory</a>
                 </div>`;
                 } else {
                     list.innerHTML = filtered.map(renderMemoryCard).join('');
@@ -192,7 +208,6 @@
                 const q = document.getElementById('mem-search').value.trim();
                 if (!q) { showToast('Please enter a search query', 'info'); return; }
                 renderAll();
-                showToast(`Found results`, 'success');
             });
 
             document.getElementById('summary-btn').addEventListener('click', async () => {

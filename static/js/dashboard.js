@@ -37,8 +37,7 @@
     // ---------- LOGOUT ----------
     document.getElementById('logout-btn').addEventListener('click', () => {
         sessionStorage.removeItem('user');
-        showToast('Logged out successfully', 'success');
-        setTimeout(() => window.location.href = '/', 500);
+        window.location.href = '/';
     });
 
     // ---------- PREMIUM MODAL ----------
@@ -249,7 +248,156 @@
     // ---------- IMAGE UPLOADER ----------
     let imageData = null;
     document.getElementById('upload-file-zone').addEventListener('click', () => document.getElementById('image-file-input').click());
-    document.getElementById('camera-zone').addEventListener('click', () => document.getElementById('camera-input').click());
+    // ---------- CUSTOM CAMERA ----------
+    let cameraStream = null;
+    let currentFacingMode = 'environment'; // Default to back camera
+    // ---------- USER INFO & AVATAR ----------
+    const userNameDisplay = document.getElementById('user-name-display');
+    const userEmailDisplay = document.getElementById('user-email-display');
+    const userAvatar = document.getElementById('user-avatar');
+
+    // Mobile versions
+    const mobileUserName = document.getElementById('mobile-user-name');
+    const mobileUserEmail = document.getElementById('mobile-user-email');
+    const mobileUserAvatar = document.getElementById('mobile-user-avatar');
+
+    if (user) {
+        if (userNameDisplay) userNameDisplay.textContent = user.name;
+        if (userEmailDisplay) userEmailDisplay.textContent = user.email;
+        if (mobileUserName) mobileUserName.textContent = user.name;
+        if (mobileUserEmail) mobileUserEmail.textContent = user.email;
+
+        const initials = user.name.split(' ').map(n => n[0]).join('').toUpperCase();
+        if (userAvatar) userAvatar.textContent = initials;
+        if (mobileUserAvatar) mobileUserAvatar.textContent = initials;
+    }
+
+    // ---------- MOBILE MENU ----------
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const closeMenuBtn = document.getElementById('close-menu-btn');
+    const mobileMenuOverlay = document.getElementById('mobile-menu-overlay');
+    const mobileLogoutBtn = document.getElementById('mobile-logout-btn');
+
+    if (mobileMenuBtn) {
+        mobileMenuBtn.addEventListener('click', () => {
+            mobileMenuOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+    }
+
+    if (closeMenuBtn) {
+        closeMenuBtn.addEventListener('click', () => {
+            mobileMenuOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+        });
+    }
+
+    if (mobileMenuOverlay) {
+        mobileMenuOverlay.addEventListener('click', (e) => {
+            if (e.target === mobileMenuOverlay) {
+                mobileMenuOverlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        });
+    }
+
+    if (mobileLogoutBtn) {
+        mobileLogoutBtn.addEventListener('click', () => {
+            sessionStorage.removeItem('user');
+            window.location.href = '/login';
+        });
+    }
+    const cameraModal = document.getElementById('camera-modal');
+    const cameraVideo = document.getElementById('camera-video');
+    const cameraCanvas = document.getElementById('camera-canvas');
+    const switchBtn = document.getElementById('switch-camera-btn');
+
+    async function startCamera() {
+        if (cameraStream) {
+            cameraStream.getTracks().forEach(track => track.stop());
+        }
+
+        const constraints = {
+            video: {
+                facingMode: { ideal: currentFacingMode },
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+            },
+            audio: false
+        };
+
+        try {
+            cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+            cameraVideo.srcObject = cameraStream;
+            cameraModal.classList.add('active');
+
+            // Mirror video if using front camera
+            if (currentFacingMode === 'user') {
+                cameraVideo.style.transform = 'scaleX(-1)';
+            } else {
+                cameraVideo.style.transform = 'scaleX(1)';
+            }
+
+            document.getElementById('camera-instruction').textContent =
+                currentFacingMode === 'user' ? 'Taking a selfie' : 'Position your subject';
+        } catch (err) {
+            console.error('Camera error:', err);
+            showToast('Could not access camera. Please check permissions.', 'error');
+            // Fallback to traditional input if possible
+            document.getElementById('camera-input').click();
+        }
+    }
+
+    function stopCamera() {
+        if (cameraStream) {
+            cameraStream.getTracks().forEach(track => track.stop());
+            cameraStream = null;
+        }
+        cameraVideo.srcObject = null;
+        cameraModal.classList.remove('active');
+    }
+
+    async function switchCamera() {
+        currentFacingMode = (currentFacingMode === 'user') ? 'environment' : 'user';
+        await startCamera();
+    }
+
+    function capturePhoto() {
+        const context = cameraCanvas.getContext('2d');
+        cameraCanvas.width = cameraVideo.videoWidth;
+        cameraCanvas.height = cameraVideo.videoHeight;
+
+        // Handle mirroring for selfie in the final image
+        if (currentFacingMode === 'user') {
+            context.translate(cameraCanvas.width, 0);
+            context.scale(-1, 1);
+        }
+
+        context.drawImage(cameraVideo, 0, 0, cameraCanvas.width, cameraCanvas.height);
+
+        imageData = cameraCanvas.toDataURL('image/jpeg', 0.8);
+        document.getElementById('image-preview-img').src = imageData;
+        document.getElementById('image-upload-area').style.display = 'none';
+        document.getElementById('image-preview-area').style.display = 'block';
+
+        stopCamera();
+        showToast('Photo captured!', 'success');
+    }
+
+    document.getElementById('camera-zone').addEventListener('click', (e) => {
+        e.preventDefault();
+        startCamera();
+    });
+
+    document.getElementById('close-camera-modal').addEventListener('click', stopCamera);
+    switchBtn.addEventListener('click', switchCamera);
+    document.getElementById('take-photo-btn').addEventListener('click', capturePhoto);
+
+    // Close camera modal on overlay click
+    cameraModal.addEventListener('click', (e) => {
+        if (e.target === cameraModal) stopCamera();
+    });
+
 
     function handleImageFile(e) {
         const file = e.target.files[0];
@@ -298,72 +446,6 @@
         finally { btn.disabled = false; btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> Save Memory'; }
     });
 
-    // ---------- PDF UPLOADER ----------
-    let pdfFile = null;
-    document.getElementById('pdf-upload-zone').addEventListener('click', () => document.getElementById('pdf-file-input').click());
-    document.getElementById('pdf-file-input').addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        if (file.type !== 'application/pdf') { showToast('Please select a PDF', 'error'); return; }
-        if (file.size > 10 * 1024 * 1024) { showToast('PDF must be less than 10MB', 'error'); return; }
-        pdfFile = file;
-        document.getElementById('pdf-file-name').textContent = file.name;
-        const kb = file.size / 1024;
-        document.getElementById('pdf-file-size').textContent = kb < 1024 ? kb.toFixed(2) + ' KB' : (kb / 1024).toFixed(2) + ' MB';
-        document.getElementById('pdf-upload-area').style.display = 'none';
-        document.getElementById('pdf-file-area').style.display = 'block';
-    });
-    document.getElementById('remove-pdf-btn').addEventListener('click', () => {
-        pdfFile = null;
-        document.getElementById('pdf-file-input').value = '';
-        document.getElementById('pdf-upload-area').style.display = 'block';
-        document.getElementById('pdf-file-area').style.display = 'none';
-    });
-
-    document.getElementById('process-pdf-btn').addEventListener('click', async () => {
-        if (!pdfFile) return;
-        document.getElementById('pdf-file-area').style.display = 'none';
-        document.getElementById('pdf-processing-area').style.display = 'block';
-        document.getElementById('pdf-processing-name').textContent = pdfFile.name;
-        // Read file as base64
-        const reader = new FileReader();
-        reader.onload = async (ev) => {
-            const base64 = ev.target.result;
-            // Simulate progress
-            let progress = 0;
-            const progressInterval = setInterval(() => {
-                progress = Math.min(progress + 5, 90);
-                document.getElementById('pdf-progress-bar').style.width = progress + '%';
-                document.getElementById('pdf-progress-text').textContent = progress + '% complete';
-            }, 200);
-            try {
-                const res = await fetch('/api/process-memory', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json', 'X-User-Id': user.id },
-                    body: JSON.stringify({ voice_text: 'PDF: ' + pdfFile.name, has_image: true, image_data: base64 })
-                });
-                clearInterval(progressInterval);
-                document.getElementById('pdf-progress-bar').style.width = '100%';
-                document.getElementById('pdf-progress-text').textContent = '100% complete';
-                const data = await res.json();
-                if (res.ok) {
-                    showToast('PDF processed successfully!', 'success');
-                    setTimeout(() => {
-                        pdfFile = null;
-                        document.getElementById('pdf-file-input').value = '';
-                        document.getElementById('pdf-processing-area').style.display = 'none';
-                        document.getElementById('pdf-upload-area').style.display = 'block';
-                        document.getElementById('pdf-progress-bar').style.width = '0%';
-                    }, 1000);
-                    loadMemories(); loadUsage();
-                } else if (res.status === 402) {
-                    showToast(data.message, 'error'); openPremium();
-                    document.getElementById('pdf-processing-area').style.display = 'none';
-                    document.getElementById('pdf-upload-area').style.display = 'block';
-                } else showToast(data.error || 'Failed', 'error');
-            } catch (e) { clearInterval(progressInterval); showToast('Connection error', 'error'); }
-        };
-        reader.readAsDataURL(pdfFile);
-    });
 
     // ---------- LOAD MEMORIES ----------
     async function loadMemories() {

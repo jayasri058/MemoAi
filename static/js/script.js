@@ -61,9 +61,12 @@ function renderMemoryCard(memory) {
     const tags = memory.tags || [];
     const tagsArray = Array.isArray(tags) ? tags : (typeof tags === 'string' ? JSON.parse(tags || '[]') : []);
     const timestamp = memory.created_at || memory.timestamp || new Date().toISOString();
-    const imageHtml = memory.image_path && memory.has_image ? 
+    const imageHtml = memory.image_path && memory.has_image ?
         `<div class="memory-card-image"><img src="/uploads/${memory.image_path.split(/[/\\]/).pop()}" alt="${memory.title || ''}"></div>` : '';
-    
+
+    // Use description or context if content is thin
+    const displayContent = memory.content || memory.image_description || memory.context || memory.voice_text || '';
+
     return `
         <div class="memory-card" data-category="${category.toLowerCase()}">
             <div class="memory-card-header">
@@ -76,7 +79,7 @@ function renderMemoryCard(memory) {
                 </div>
             </div>
             ${imageHtml}
-            <p class="memory-content">${memory.content || memory.voice_text || ''}</p>
+            <p class="memory-content">${displayContent}</p>
             <div class="memory-footer">
                 <span class="category-badge ${getCategoryClass(category)}">${category}</span>
                 ${tagsArray.length > 0 ? `

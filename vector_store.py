@@ -204,6 +204,7 @@ class PineconeManager:
             "context": str(memory_data.get('context', ''))[:1000],
             "tags": tags_str,
             "image_path": str(memory_data.get('image_path', '') or ''),
+            "image_description": str(memory_data.get('image_description', '') or '')[:1000],
             "created_at": datetime.now().isoformat(),
             "updated_at": datetime.now().isoformat(),
             "type": memory_data.get('type', 'memory'),
@@ -221,40 +222,6 @@ class PineconeManager:
             print(f"Error saving memory to Pinecone: {e}")
             return None
 
-    def save_memory_chunks(self, memory_id: int, user_id: int, chunks: List[Dict]):
-        """
-        Save multiple chunks for a single memory (e.g., PDF chunks).
-        Each chunk dict should have 'vector', 'metadata'.
-        """
-        if not self.index:
-            return False
-
-        try:
-            vectors_to_upsert = []
-            for i, chunk in enumerate(chunks):
-                chunk_id = f"{memory_id}_{i}"
-                meta = chunk.get('metadata', {})
-                meta['memory_id'] = memory_id
-                meta['user_id'] = user_id
-                meta['chunk_index'] = i
-                meta['type'] = 'pdf_chunk'
-                meta['created_at'] = datetime.now().isoformat()
-                meta['date'] = datetime.now().strftime('%Y-%m-%d')
-
-                # Clean metadata values
-                clean_meta = self._clean_metadata(meta)
-                vectors_to_upsert.append((chunk_id, chunk['vector'], clean_meta))
-
-            # Batch upsert
-            batch_size = 100
-            for i in range(0, len(vectors_to_upsert), batch_size):
-                batch = vectors_to_upsert[i:i + batch_size]
-                self.index.upsert(vectors=batch, namespace=self.MEMORIES_NAMESPACE)
-
-            return True
-        except Exception as e:
-            print(f"Error saving memory chunks to Pinecone: {e}")
-            return False
 
     def get_memory(self, memory_id: int, user_id: Optional[int] = None) -> Optional[Dict]:
         """Get a specific memory by ID"""
@@ -303,8 +270,8 @@ class PineconeManager:
                 else:
                     filter_dict["user_id"] = {"$eq": user_id}
             
-            # Exclude chunks - only get main memories
-            filter_dict["type"] = {"$ne": "pdf_chunk"}
+            # Filter to get main memories
+            filter_dict["type"] = {"$in": ["image", "voice", "memory"]}
 
             results = self.index.query(
                 vector=dummy_vector,
@@ -409,10 +376,6 @@ class PineconeManager:
 
             # Delete the main memory vector
             ids_to_delete = [str(memory_id)]
-
-            # Also delete any associated chunks (e.g., PDF chunks: memoryId_0, memoryId_1, ...)
-            for i in range(100):  # Max 100 chunks per memory
-                ids_to_delete.append(f"{memory_id}_{i}")
 
             self.index.delete(
                 ids=ids_to_delete,
@@ -538,6 +501,8 @@ class PineconeManager:
             'context': meta.get('context', ''),
             'tags': tags,
             'image_path': meta.get('image_path', ''),
+            'image_description': meta.get('image_description', ''),
+            'has_image': bool(meta.get('has_image', False)),
             'created_at': meta.get('created_at', ''),
             'updated_at': meta.get('updated_at', ''),
         }

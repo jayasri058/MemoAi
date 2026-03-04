@@ -7,6 +7,25 @@
     <meta name="description" content="Sign in to MemoAI - Access your AI-powered second brain">
     <title>Login - MemoAI</title>
     <link rel="stylesheet" href="/static/css/styles.css">
+    <style>
+        body {
+            visibility: hidden;
+        }
+
+        .not-logged-in body {
+            visibility: visible !important;
+        }
+    </style>
+    <script>
+        (function () {
+            const user = sessionStorage.getItem('user');
+            if (user) {
+                window.location.href = '/dashboard';
+            } else {
+                document.documentElement.classList.add('not-logged-in');
+            }
+        })();
+    </script>
 </head>
 
 <body>
@@ -130,8 +149,7 @@
                 if (res.ok) {
                     sessionStorage.setItem('user', JSON.stringify(data.user));
                     localStorage.setItem('hasVisited', 'true');
-                    showToast('Login successful!', 'success');
-                    setTimeout(() => window.location.href = '/', 500);
+                    window.location.href = '/dashboard';
                 } else {
                     showToast(data.error || 'Invalid credentials', 'error');
                 }
@@ -173,8 +191,7 @@
                 if (res.ok) {
                     sessionStorage.setItem('user', JSON.stringify(data.user));
                     localStorage.setItem('hasVisited', 'true');
-                    showToast(data.message, 'success');
-                    setTimeout(() => window.location.href = '/', 500);
+                    window.location.href = '/dashboard';
                 } else { showToast(data.error, 'error'); }
             } catch (err) { showToast('Connection error', 'error'); }
             document.getElementById('google-account-modal').classList.remove('active');

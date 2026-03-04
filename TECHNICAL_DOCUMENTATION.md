@@ -43,7 +43,6 @@
 |---|---|
 | **Voice Capture** | Browser-based speech recognition converts spoken thoughts to text |
 | **Image Analysis** | Google Gemini Vision analyzes uploaded images; BLIP model as fallback |
-| **PDF Processing** | Extracts text from uploaded PDFs, chunks and indexes for search |
 | **Smart Categorization** | AI-powered + keyword-based classification into 8 categories |
 | **Semantic Search** | Vector similarity search via Pinecone + text-based fallback |
 | **AI Summaries** | Gemini-powered summaries of a user's recent memory activity |
@@ -57,11 +56,11 @@
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                         CLIENT (Browser)                        │
-│  ┌──────────┐  ┌───────────┐  ┌──────────┐  ┌───────────────┐  │
-│  │ Voice    │  │ Image     │  │ PDF      │  │ Search &      │  │
-│  │ Recorder │  │ Upload    │  │ Upload   │  │ Dashboard     │  │
-│  └────┬─────┘  └─────┬─────┘  └────┬─────┘  └──────┬────────┘  │
-│       └──────────────┼─────────────┼───────────────┘            │
+│  ┌──────────┐  ┌───────────┐  ┌───────────────┐  │
+│  │ Voice    │  │ Image     │  │ Search &      │  │
+│  │ Recorder │  │ Upload    │  │ Dashboard     │  │
+│  └────┬─────┘  └─────┬─────┘  └──────┬────────┘  │
+│       └──────────────┼───────────────┘            │
 │                      ▼                                          │
 │              REST API (JSON / Base64)                            │
 └──────────────────────┬──────────────────────────────────────────┘
@@ -207,7 +206,6 @@ memo-ai/
 | **Transformers (HuggingFace)** | ≥ 4.57.3 | BLIP fallback for image captioning |
 | **PyTorch** | ≥ 2.9.1 | ML framework backend |
 | **LangChain** | ≥ 1.2.3 | LLM orchestration (used in legacy processor) |
-| **PyPDF2** | — | PDF text extraction |
 | **Pillow** | ≥ 12.1.0 | Image processing, EXIF metadata stripping |
 
 ### Database & Vector Storage
@@ -244,22 +242,19 @@ This is the main entry point of the application. It initializes all services, de
 - **Service Initialization:** Loads Gemini API, Sentence Transformer, Pinecone manager
 - **Route Definitions:** All REST API endpoints (auth, memory CRUD, search, payment)
 - **Memory Processing Pipeline:** `process_memory_logic()` orchestrates AI analysis
-- **Vector Operations:** Embedding generation, chunked PDF indexing, similarity search
+- **Vector Operations:** Embedding generation, similarity search
 
 #### Important Functions
 
 | Function | Lines | Description |
 |---|---|---|
 | `get_embedding(text)` | 137–142 | Generates 384-dim embedding via SentenceTransformer |
-| `chunk_text(text, chunk_size, overlap)` | 144–159 | Splits text into overlapping chunks for PDF indexing |
 | `add_to_vector_index(memory_id, text, user_id, metadata)` | 161–180 | Upserts a single memory vector to Pinecone |
-| `add_pdf_to_vector_index(memory_id, pdf_text, user_id, metadata)` | 182–210 | Chunks PDF text and batch-upserts to Pinecone |
 | `search_similar_vectors(query_text, user_id, top_k, threshold)` | 212–249 | Queries Pinecone for semantically similar memories |
 | `process_memory_logic(voice_text, image_path)` | 632–667 | Core AI pipeline: image analysis → tags → category → context |
 | `classify_category(text)` | 669–687 | Keyword-based category classification (8 categories) |
 | `generate_tags(text)` | 711–748 | Rule-based tag generation fallback |
 | `generate_title(text)` | 750–761 | Generates title from first 5 words of text |
-| `extract_pdf_text(pdf_path)` | 118–135 | Extracts text content from PDF files |
 | `login_required(f)` | 99–111 | Decorator for authenticated endpoints |
 
 #### Initialization Sequence
@@ -316,7 +311,7 @@ class DatabaseManager:
 | `get_memory` | `(memory_id, user_id) → Optional[Dict]` | Fetches single memory by ID |
 | `get_all_memories` | `(user_id) → List[Dict]` | All user memories, resolves legacy IDs |
 | `search_memories` | `(query, user_id) → List[Dict]` | Text-based search fallback |
-| `delete_memory` | `(memory_id, user_id) → bool` | Deletes memory + associated chunks |
+| `delete_memory` | `(memory_id, user_id) → bool` | Deletes memory |
 | `update_memory` | `(memory_id, update_data, user_id) → bool` | Updates memory metadata |
 
 #### Legacy ID Resolution
@@ -401,7 +396,7 @@ metadata = {
     "image_path":  str,           # Path to associated image file
     "created_at":  str (ISO),     # Creation timestamp
     "updated_at":  str (ISO),     # Last update timestamp
-    "type":        str,           # "memory" | "pdf" | "pdf_chunk"
+    "type":        str,           # "memory" | "image" | "voice"
     "has_image":   bool,          # Whether memory has an image
     "date":        str (YYYY-MM-DD) # Date for filtering
 }
@@ -412,26 +407,6 @@ metadata = {
 | Method | Description |
 |---|---|
 | `save_memory(user_id, memory_data, vector)` | Upserts a single vector with metadata |
-| `save_memory_chunks(memory_id, user_id, chunks)` | Batch-upserts PDF chunks (100 per batch) |
-| `get_memory(memory_id, user_id)` | Fetches by ID; verifies user ownership |
-| `get_all_memories(user_id)` | Queries all memories with `$in` / `$eq` filter |
-| `query_similarity(vector, user_id, top_k, threshold)` | Cosine similarity search with score filtering |
-| `search_memories(query_text, user_id)` | In-memory text search fallback |
-| `delete_memory(memory_id, user_id)` | Deletes memory + up to 100 associated chunks |
-| `update_memory(memory_id, update_data, user_id)` | Re-upserts with updated metadata, same vector |
-
-#### PDF Chunk Strategy
-
-PDFs are chunked for granular vector search:
-
-```
-Chunk Size: 600 characters
-Overlap:    120 characters
-ID Format:  {memory_id}_{chunk_index}  (e.g., "123456789_0", "123456789_1")
-Batch Size: 100 vectors per upsert batch
-```
-
-Each chunk stores its `page_number` (extracted from `[Page N]` markers) and full text content in metadata.
 
 ---
 
@@ -605,7 +580,7 @@ Authenticate or auto-register via Google account selection.
 
 #### `POST /api/process-memory` 🔒
 
-Process and store a new memory (voice text + optional image/PDF).
+Process and store a new memory (voice text + optional image).
 
 **Headers:**
 ```

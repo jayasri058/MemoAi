@@ -25,7 +25,6 @@ flask-cors
 flask-limiter
 python-dotenv
 werkzeug
-PyPDF2
 passlib
 
 flask-limiter 

@@ -7,6 +7,25 @@
     <meta name="description" content="Create your MemoAI account - Start capturing your memories today">
     <title>Register - MemoAI</title>
     <link rel="stylesheet" href="/static/css/styles.css">
+    <style>
+        body {
+            visibility: hidden;
+        }
+
+        .not-logged-in body {
+            visibility: visible !important;
+        }
+    </style>
+    <script>
+        (function () {
+            const user = sessionStorage.getItem('user');
+            if (user) {
+                window.location.href = '/dashboard';
+            } else {
+                document.documentElement.classList.add('not-logged-in');
+            }
+        })();
+    </script>
 </head>
 
 <body>
@@ -142,7 +161,7 @@
                         localStorage.setItem('hasVisited', 'true');
                     }
                     showToast('Account created successfully!', 'success');
-                    setTimeout(() => window.location.href = '/', 500);
+                    window.location.href = '/dashboard';
                 } else { showToast(data.error || 'Registration failed', 'error'); }
             } catch (err) { showToast('Connection error', 'error'); }
             finally { btn.disabled = false; btn.textContent = 'Create Account'; }

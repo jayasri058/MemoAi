@@ -5,12 +5,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description"
-        content="MemoAI - Your AI-powered second brain. Capture, categorize, and retrieve your thoughts using voice, images, and PDFs with advanced AI and vector search.">
+        content="MemoAI - Your AI-powered second brain. Capture, categorize, and retrieve your thoughts using voice and images with advanced AI and vector search.">
     <title>MemoAI - Your AI-Powered Second Brain</title>
     <link rel="stylesheet" href="/static/css/styles.css">
+    <style>
+        body {
+            display: none;
+        }
+
+        .not-logged-in body {
+            display: block !important;
+        }
+    </style>
     <script>
-        const user = sessionStorage.getItem('user');
-        if (user) { window.location.href = '/dashboard'; }
+        (function () {
+            const user = sessionStorage.getItem('user');
+            if (user) {
+                window.location.href = '/dashboard';
+            } else {
+                document.documentElement.classList.add('not-logged-in');
+            }
+        })();
     </script>
 </head>
 
@@ -32,8 +47,53 @@
                 <a href="/login" class="nav-link">Login</a>
                 <a href="/register" class="btn-primary">Get Started</a>
             </div>
+            <button class="mobile-menu-btn" id="mobile-menu-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
         </div>
     </nav>
+
+    <!-- Mobile Menu Overlay -->
+    <div class="mobile-menu-overlay" id="mobile-menu-overlay">
+        <div class="mobile-menu-content">
+            <div class="mobile-menu-header">
+                <span class="gradient-text" style="font-weight:700;font-size:1.25rem">MemoAI</span>
+                <button class="close-menu-btn" id="close-menu-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <nav class="mobile-nav-links">
+                <a href="/login">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2">
+                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                        <polyline points="10 17 15 12 10 7"></polyline>
+                        <line x1="15" y1="12" x2="3" y2="12"></line>
+                    </svg>
+                    Login
+                </a>
+                <a href="/register">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="8.5" cy="7" r="4"></circle>
+                        <line x1="20" y1="8" x2="20" y2="14"></line>
+                        <line x1="23" y1="11" x2="17" y2="11"></line>
+                    </svg>
+                    Get Started
+                </a>
+            </nav>
+        </div>
+    </div>
 
     <!-- Hero Section -->
     <section class="hero-section">
@@ -108,18 +168,6 @@
             <div class="feature-card">
                 <div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                        <polyline points="14 2 14 8 20 8" />
-                        <line x1="16" y1="13" x2="8" y2="13" />
-                        <line x1="16" y1="17" x2="8" y2="17" />
-                        <polyline points="10 9 9 9 8 9" />
-                    </svg></div>
-                <h3>PDF Processing</h3>
-                <p>Upload PDFs and extract text with smart chunking for easy searching.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="11" cy="11" r="8" />
                         <line x1="21" y1="21" x2="16.65" y2="16.65" />
                     </svg></div>
@@ -174,7 +222,7 @@
             <div class="how-step">
                 <div class="how-number">1</div>
                 <h3>Capture</h3>
-                <p>Speak, upload images, or add PDFs. MemoAI captures everything instantly.</p>
+                <p>Speak or upload images. MemoAI captures everything instantly.</p>
             </div>
             <div class="how-step">
                 <div class="how-number">2</div>
@@ -207,7 +255,7 @@
                     <li><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2">
                             <polyline points="20 6 9 17 4 12" />
-                        </svg> Voice, image & PDF capture</li>
+                        </svg> Voice & image capture</li>
                     <li><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2">
                             <polyline points="20 6 9 17 4 12" />
@@ -289,6 +337,35 @@
             <p>&copy; 2026 MemoAI. All rights reserved. Built with AI technology.</p>
         </div>
     </footer>
+    <script>
+        // Mobile Menu Logic
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const closeMenuBtn = document.getElementById('close-menu-btn');
+        const mobileMenuOverlay = document.getElementById('mobile-menu-overlay');
+
+        if (mobileMenuBtn) {
+            mobileMenuBtn.addEventListener('click', () => {
+                mobileMenuOverlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            });
+        }
+
+        if (closeMenuBtn) {
+            closeMenuBtn.addEventListener('click', () => {
+                mobileMenuOverlay.classList.remove('active');
+                document.body.style.overflow = '';
+            });
+        }
+
+        if (mobileMenuOverlay) {
+            mobileMenuOverlay.addEventListener('click', (e) => {
+                if (e.target === mobileMenuOverlay) {
+                    mobileMenuOverlay.classList.remove('active');
+                    document.body.style.overflow = '';
+                }
+            });
+        }
+    </script>
 </body>
 
 </html>
