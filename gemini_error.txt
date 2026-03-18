@@ -1,0 +1,37 @@
+Traceback (most recent call last):
+  File "<string>", line 12, in <module>
+    res = genai.embed_content(model='models/text-embedding-004', content='test', task_type='retrieval_document')
+  File "C:\Users\Jaya\AppData\Roaming\Python\Python313\site-packages\google\generativeai\embedding.py", line 213, in embed_content
+    embedding_response = client.embed_content(
+        embedding_request,
+        **request_options,
+    )
+  File "C:\Users\Jaya\AppData\Roaming\Python\Python313\site-packages\google\ai\generativelanguage_v1beta\services\generative_service\client.py", line 1263, in embed_content
+    response = rpc(
+        request,
+    ...<2 lines>...
+        metadata=metadata,
+    )
+  File "C:\Users\Jaya\AppData\Roaming\Python\Python313\site-packages\google\api_core\gapic_v1\method.py", line 131, in __call__
+    return wrapped_func(*args, **kwargs)
+  File "C:\Users\Jaya\AppData\Roaming\Python\Python313\site-packages\google\api_core\retry\retry_unary.py", line 294, in retry_wrapped_func
+    return retry_target(
+        target,
+    ...<3 lines>...
+        on_error=on_error,
+    )
+  File "C:\Users\Jaya\AppData\Roaming\Python\Python313\site-packages\google\api_core\retry\retry_unary.py", line 156, in retry_target
+    next_sleep = _retry_error_helper(
+        exc,
+    ...<6 lines>...
+        timeout,
+    )
+  File "C:\Users\Jaya\AppData\Roaming\Python\Python313\site-packages\google\api_core\retry\retry_base.py", line 214, in _retry_error_helper
+    raise final_exc from source_exc
+  File "C:\Users\Jaya\AppData\Roaming\Python\Python313\site-packages\google\api_core\retry\retry_unary.py", line 147, in retry_target
+    result = target()
+  File "C:\Users\Jaya\AppData\Roaming\Python\Python313\site-packages\google\api_core\timeout.py", line 130, in func_with_timeout
+    return func(*args, **kwargs)
+  File "C:\Users\Jaya\AppData\Roaming\Python\Python313\site-packages\google\api_core\grpc_helpers.py", line 77, in error_remapped_callable
+    raise exceptions.from_grpc_error(exc) from exc
+google.api_core.exceptions.NotFound: 404 models/text-embedding-004 is not found for API version v1beta, or is not supported for embedContent. Call ListModels to see the list of available models and their supported methods.

@@ -76,7 +76,7 @@ class DatabaseManager:
         from vector_store import PineconeManager
 
         pinecone_api_key = os.getenv('PINECONE_API_KEY', '')
-        pinecone_index = os.getenv('PINECONE_INDEX_NAME', 'memo-ai-index')
+        pinecone_index = os.getenv('PINECONE_INDEX_NAME', 'memo-ai-index-gemini')
 
         self.pinecone = PineconeManager(
             api_key=pinecone_api_key,

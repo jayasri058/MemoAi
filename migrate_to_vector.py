@@ -5,7 +5,14 @@ Migrates all existing memories from SQLite to FAISS vector index
 
 import sqlite3
 import numpy as np
-from sentence_transformers import SentenceTransformer
+import google.generativeai as genai
+from dotenv import load_dotenv
+
+load_dotenv()
+if os.getenv('Gemini_api_key'):
+    genai.configure(api_key=os.getenv('Gemini_api_key'))
+elif os.getenv('GEMINI_API_KEY'):
+    genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
 import faiss
 import pickle
 import os
@@ -18,13 +25,12 @@ def migrate_to_vector_db():
     print("=" * 60)
     
     # Initialize embedder
-    print("\n[1/5] Loading sentence transformer model...")
+    print("\n[1/5] Setting up Gemini embedding model...")
     try:
-        embedder = SentenceTransformer('all-MiniLM-L6-v2')
-        dimension = 384  # all-MiniLM-L6-v2 embedding dimension
-        print("✓ Model loaded successfully")
+        dimension = 768  # Gemini text-embedding-004 dimension
+        print("✓ Model configured successfully")
     except Exception as e:
-        print(f"✗ Error loading model: {e}")
+        print(f"✗ Error configuring model: {e}")
         return
     
     # Initialize FAISS index
@@ -93,7 +99,12 @@ def migrate_to_vector_db():
                 continue
             
             # Generate embedding
-            embedding = embedder.encode(combined_text, convert_to_numpy=True)
+            result = genai.embed_content(
+                model="models/text-embedding-004",
+                content=combined_text,
+                task_type="retrieval_document"
+            )
+            embedding = np.array(result['embedding'], dtype=np.float32)
             
             # Normalize for cosine similarity (required for IndexFlatIP)
             embedding = embedding / np.linalg.norm(embedding)

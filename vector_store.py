@@ -22,7 +22,7 @@ class PineconeManager:
     USERS_NAMESPACE = "users"
     MEMORIES_NAMESPACE = "memories"
 
-    def __init__(self, api_key: str, index_name: str = "memo-ai-index", dimension: int = 384):
+    def __init__(self, api_key: str, index_name: str = "memo-ai-index-gemini", dimension: int = 3072):
         self.index = None
         self.dimension = dimension
 
@@ -85,7 +85,7 @@ class PineconeManager:
         user_id = int(datetime.now().timestamp() * 1000) % 2_000_000_000
 
         # Store user - use a dummy vector (users don't need real embeddings)
-        dummy_vector = [0.0] * self.dimension
+        dummy_vector = [0.0001] * self.dimension
 
         metadata = {
             "user_id": user_id,
@@ -147,7 +147,7 @@ class PineconeManager:
             return []
 
         try:
-            dummy_vector = [0.0] * self.dimension
+            dummy_vector = [0.0001] * self.dimension
             results = self.index.query(
                 vector=dummy_vector,
                 top_k=100,
@@ -259,7 +259,7 @@ class PineconeManager:
             return []
 
         try:
-            dummy_vector = [0.0] * self.dimension
+            dummy_vector = [0.0001] * self.dimension
             filter_dict = {}
             
             # Handle single ID or list of IDs
@@ -424,7 +424,7 @@ class PineconeManager:
             meta['updated_at'] = datetime.now().isoformat()
 
             # Re-upsert with same vector but updated metadata
-            existing_vector = getattr(existing, 'values', None) or existing.get('values', [0.0] * self.dimension)
+            existing_vector = getattr(existing, 'values', None) or existing.get('values', [0.0001] * self.dimension)
             self.index.upsert(
                 vectors=[(str(memory_id), existing_vector, meta)],
                 namespace=self.MEMORIES_NAMESPACE

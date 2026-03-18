@@ -48,7 +48,7 @@ MEMORY_FREE_LIMIT = 10  # Free tier: 10 memories per account
 
 # Load environment variables
 load_dotenv()
-GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY') or os.getenv('Gemini_api_key')
 
 # Configuration
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
@@ -61,14 +61,8 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 # Initialize database (Pinecone-backed)
 db_manager = get_db_manager()
 
-# Initialize sentence transformer for embeddings
-try:
-    from sentence_transformers import SentenceTransformer
-    embedder = SentenceTransformer('all-MiniLM-L6-v2')
-    print("Sentence transformer loaded: all-MiniLM-L6-v2")
-except ImportError:
-    print("Warning: sentence-transformers not installed. Install with: pip install sentence-transformers")
-    embedder = None
+# Embeddings are now handled by GeminiService
+embedder = None
 
 # Initialize AI Services
 from ai_services import GeminiService
@@ -103,11 +97,11 @@ def allowed_file(filename):
 
 
 def get_embedding(text):
-    """Get embedding for text using sentence transformer"""
-    if embedder and text:
-        embedding = embedder.encode([text], normalize_embeddings=True)
-        return embedding[0]
-    return np.zeros(384, dtype=np.float32)
+    """Get embedding for text using Gemini"""
+    if gemini_service and text:
+        embedding = gemini_service.get_embedding(text)
+        return np.array(embedding, dtype=np.float32)
+    return np.zeros(3072, dtype=np.float32)
 
 def chunk_text(text, chunk_size=600, overlap=100):
     """Split text into chunks with overlap for better vector search"""
@@ -128,7 +122,7 @@ def chunk_text(text, chunk_size=600, overlap=100):
 
 def add_to_vector_index(memory_id, text, user_id, metadata=None):
     """Add a memory to Pinecone for similarity search"""
-    if pinecone_manager is None or not embedder:
+    if pinecone_manager is None:
         return
         
     embedding = get_embedding(text)
@@ -150,7 +144,7 @@ def add_to_vector_index(memory_id, text, user_id, metadata=None):
 
 def search_similar_vectors(query_text, user_id, top_k=5, threshold=0.3):
     """Search for similar vectors using Pinecone, scoped by user"""
-    if pinecone_manager is None or not embedder:
+    if pinecone_manager is None:
         return []
     
     embedding = get_embedding(query_text)
@@ -738,7 +732,7 @@ def search_memories(user_id):
 
         # Vector similarity search via Pinecone
         similar_results = []
-        if pinecone_manager is not None and embedder:
+        if pinecone_manager is not None:
             # Pass the list of IDs for vector search
             similar_results = search_similar_vectors(query_lower, user_id=user_ids, top_k=10, threshold=0.3)
 

@@ -8,7 +8,7 @@ import json
 from datetime import datetime
 from PIL import Image
 from transformers import pipeline
-from sentence_transformers import SentenceTransformer
+
 from langchain_google_genai import GoogleGenerativeAI
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import PydanticOutputParser
@@ -56,15 +56,10 @@ def initialize_models():
             llm = None
     
     # Initialize Embedding
-    try:
-        embedder = SentenceTransformer("all-MiniLM-L6-v2")
-        print("Embedder loaded")
-    except Exception as e:
-        print(f"Embedder error: {e}")
-        embedder = None
+    print("Gemini embeddings will be used instead of local sentence-transformers")
     
     # Load Memory & Index
-    dimension = 384
+    dimension = 3072
     if os.path.exists(MEMORY_FILE):
         try:
             with open(MEMORY_FILE, 'r') as f:
@@ -107,8 +102,16 @@ def analyze_image(image_path):
         return f"Image analysis failed: {str(e)}"
 
 def get_embedding(text):
-    if not embedder: return np.random.rand(384).astype('float32')
-    return embedder.encode(text)
+    try:
+        result = genai.embed_content(
+            model="models/gemini-embedding-2-preview",
+            content=text,
+            task_type="retrieval_document"
+        )
+        return np.array(result['embedding'], dtype=np.float32)
+    except Exception as e:
+        print(f"Embedding error: {e}")
+        return np.zeros(3072, dtype='float32')
 
 def store_memory(embedding, record):
     global index, memory

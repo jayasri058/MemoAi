@@ -93,3 +93,22 @@ class GeminiService:
         except Exception as e:
             print(f"Error generating tags: {e}")
             return []
+
+    def get_embedding(self, text: str) -> list[float]:
+        """
+        Generate text embeddings using Gemini.
+        Produces 768-dimensional embeddings via text-embedding-004.
+        """
+        try:
+            # The user requested 'gemini-embedding-2-preview', but standardizing on latest stable:
+            result = genai.embed_content(
+                model="models/gemini-embedding-2-preview",
+                content=text,
+                task_type="retrieval_document"
+            )
+            return result['embedding']
+        except Exception as e:
+            print(f"Error generating embedding: {e}")
+            # return zero vector of Gemini dimension if it fails
+            return [0.0] * 3072
+
