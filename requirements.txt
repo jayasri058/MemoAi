@@ -1,11 +1,5 @@
-torch 
-transformers 
-accelerate 
-datasets 
-librosa 
-soundfile 
-sentence-transformers 
 pinecone
+gunicorn
 tiktoken 
 colorama
 
@@ -27,8 +21,6 @@ python-dotenv
 werkzeug
 passlib
 
-flask-limiter 
 numpy 
-faiss-cpu 
 pydantic 
 pandas
